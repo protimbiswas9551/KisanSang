@@ -1,0 +1,1390 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  Sprout, 
+  CloudSun, 
+  Mic, 
+  MapPin, 
+  Droplets, 
+  Thermometer, 
+  Wind, 
+  AlertTriangle,
+  Settings,
+  Home,
+  Database,
+  MessageSquare,
+  Search,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Camera,
+  Upload,
+  Loader2
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { AppState, Language, SoilData, WeatherData } from './types';
+import { CROPS, DISEASES, TRANSLATIONS } from './constants';
+import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse, analyzeCropImage } from './services';
+import { fetchStockImage } from './imageService';
+import { cn } from './utils';
+
+export default function App() {
+  const [state, setState] = useState<AppState>({
+    language: 'hi',
+    location: null,
+    soil: null,
+    weather: null,
+    loading: true,
+    error: null,
+    isRefreshing: false,
+    previousCropId: '',
+  });
+
+  const [activeTab, setActiveTab] = useState('home');
+  const [isBotOpen, setIsBotOpen] = useState(false);
+  const [isSoilModalOpen, setIsSoilModalOpen] = useState(false);
+
+  const refreshData = async () => {
+    if (!state.location) return;
+    setState(prev => ({ ...prev, isRefreshing: true }));
+    try {
+      const { lat, lng } = state.location;
+      const [soil, weather] = await Promise.all([
+        fetchSoilData(lat, lng),
+        fetchWeatherData(lat, lng)
+      ]);
+      setState(prev => ({ ...prev, soil, weather, isRefreshing: false, error: null }));
+    } catch (err) {
+      setState(prev => ({ ...prev, isRefreshing: false, error: 'Refresh failed. Please try again.' }));
+    }
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      if (!navigator.geolocation) {
+        setState(prev => ({ ...prev, error: 'Geolocation not supported', loading: false }));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const { latitude, longitude } = pos.coords;
+            const [soil, weather, locationName] = await Promise.all([
+              fetchSoilData(latitude, longitude),
+              fetchWeatherData(latitude, longitude),
+              reverseGeocode(latitude, longitude)
+            ]);
+
+            setState(prev => ({
+              ...prev,
+              location: { lat: latitude, lng: longitude, name: locationName },
+              soil,
+              weather,
+              loading: false,
+              error: null
+            }));
+          } catch (err) {
+            console.error("Initialization error:", err);
+            setState(prev => ({ 
+              ...prev, 
+              error: 'Failed to fetch data for your location. Please try again later.', 
+              loading: false 
+            }));
+          }
+        },
+        (err) => {
+          console.error("Geolocation error:", err);
+          setState(prev => ({ 
+            ...prev, 
+            error: 'Location access denied. Please enable GPS or enter location manually.', 
+            loading: false 
+          }));
+        },
+        { timeout: 10000 } // 10 second timeout for GPS
+      );
+    };
+    init();
+  }, []);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      const cropImages: Record<string, string> = {};
+      const diseaseImages: Record<string, string[]> = {};
+
+      // Fetch crop images
+      for (const crop of CROPS) {
+        const img = await fetchStockImage(`${crop.name.en} plant crop`);
+        if (img) cropImages[crop.id] = img;
+      }
+
+      // Fetch disease images
+      for (const disease of DISEASES) {
+        const img = await fetchStockImage(`${disease.name.en} ${disease.crop} leaf disease`);
+        if (img) diseaseImages[disease.id] = [img];
+      }
+
+      setState(prev => ({ ...prev, cropImages, diseaseImages }));
+    };
+
+    if (!state.loading && !state.cropImages) {
+      fetchImages();
+    }
+  }, [state.loading, state.cropImages]);
+
+  const t = TRANSLATIONS[state.language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
+
+  const handleSkip = async () => {
+    setState(prev => ({ ...prev, loading: true }));
+    try {
+      // Default to New Delhi coordinates
+      const lat = 28.6139;
+      const lng = 77.2090;
+      const [soil, weather, locationName] = await Promise.all([
+        fetchSoilData(lat, lng),
+        fetchWeatherData(lat, lng),
+        reverseGeocode(lat, lng)
+      ]);
+
+      setState(prev => ({
+        ...prev,
+        location: { lat, lng, name: locationName },
+        soil,
+        weather,
+        loading: false,
+        error: null
+      }));
+    } catch (err) {
+      setState(prev => ({ ...prev, error: 'Failed to load default data', loading: false }));
+    }
+  };
+
+  const renderContent = () => {
+    if (state.loading) return <LoadingScreen onSkip={handleSkip} />;
+    
+    switch (activeTab) {
+      case 'home': return <HomeView state={state} t={t} setActiveTab={setActiveTab} />;
+      case 'soil': return <SoilView state={state} t={t} onRefresh={refreshData} onManualInput={() => setIsSoilModalOpen(true)} />;
+      case 'crops': return <CropsView state={state} t={t} onPreviousCropChange={(id) => setState(prev => ({ ...prev, previousCropId: id }))} />;
+      case 'weather': return <WeatherView state={state} t={t} onRefresh={refreshData} />;
+      case 'disease': return <DiseaseView state={state} t={t} />;
+      default: return <HomeView state={state} t={t} setActiveTab={setActiveTab} />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] font-sans pb-20">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-[#2D6A4F] rounded-lg flex items-center justify-center text-white">
+            <Sprout size={20} />
+          </div>
+          <h1 className="font-bold text-lg text-[#2D6A4F]">KisanSense</h1>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setState(s => ({ ...s, language: s.language === 'hi' ? 'en' : 'hi' }))}
+            className="text-xs font-medium bg-gray-100 px-2 py-1 rounded border border-gray-200"
+          >
+            {state.language === 'hi' ? 'English' : 'हिंदी'}
+          </button>
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <MapPin size={14} className="text-[#2D6A4F]" />
+            <span className="max-w-[100px] truncate">{state.location?.name || 'Locating...'}</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="p-4 max-w-2xl mx-auto">
+        {state.error && (
+          <div className="bg-red-50 border border-red-100 p-3 rounded-lg mb-4 flex items-center justify-between text-red-700 text-sm">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={16} />
+              {state.error}
+            </div>
+            <button onClick={() => setState(prev => ({ ...prev, error: null }))}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
+        {renderContent()}
+      </main>
+
+      {/* Manual Soil Input Modal */}
+      <AnimatePresence>
+        {isSoilModalOpen && (
+          <SoilInputModal 
+            t={t} 
+            onClose={() => setIsSoilModalOpen(false)} 
+            onSave={(soil) => {
+              setState(prev => ({ ...prev, soil }));
+              setIsSoilModalOpen(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Bottom Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 flex justify-around items-center z-50 shadow-lg">
+        <NavButton icon={<Home size={20} />} label={state.language === 'hi' ? 'होम' : 'Home'} active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+        <NavButton icon={<Droplets size={20} />} label={state.language === 'hi' ? 'मिट्टी' : 'Soil'} active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} />
+        <div className="relative -top-6">
+          <button 
+            onClick={() => setIsBotOpen(true)}
+            className="w-14 h-14 bg-[#2D6A4F] rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white active:scale-95 transition-transform"
+          >
+            <Mic size={28} />
+          </button>
+        </div>
+        <NavButton icon={<Sprout size={20} />} label={state.language === 'hi' ? 'फसल' : 'Crops'} active={activeTab === 'crops'} onClick={() => setActiveTab('crops')} />
+        <NavButton icon={<Database size={20} />} label={state.language === 'hi' ? 'रोग' : 'Disease'} active={activeTab === 'disease'} onClick={() => setActiveTab('disease')} />
+        <NavButton icon={<CloudSun size={20} />} label={state.language === 'hi' ? 'मौसम' : 'Weather'} active={activeTab === 'weather'} onClick={() => setActiveTab('weather')} />
+      </nav>
+
+      {/* Voice Bot Modal */}
+      <AnimatePresence>
+        {isBotOpen && (
+          <VoiceBot 
+            state={state} 
+            onClose={() => setIsBotOpen(false)} 
+            t={t}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function NavButton({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active: boolean, onClick: () => void }) {
+  return (
+    <button onClick={onClick} className={cn("flex flex-col items-center gap-1 transition-colors", active ? "text-[#2D6A4F]" : "text-gray-400")}>
+      {icon}
+      <span className="text-[10px] font-medium">{label}</span>
+    </button>
+  );
+}
+
+function LoadingScreen({ onSkip }: { onSkip?: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <div className="w-12 h-12 border-4 border-[#2D6A4F] border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-gray-500 animate-pulse">Loading KisanSense...</p>
+      {onSkip && (
+        <button 
+          onClick={onSkip}
+          className="mt-4 text-xs text-[#2D6A4F] font-medium underline"
+        >
+          Skip and use default location
+        </button>
+      )}
+    </div>
+  );
+}
+
+function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActiveTab: (t: string) => void }) {
+  return (
+    <div className="space-y-6">
+      <section className="bg-gradient-to-br from-[#2D6A4F] to-[#1B4332] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+        {(state.soil?.isEstimated || state.weather?.isEstimated) && (
+          <div className="absolute top-0 right-0 bg-amber-500 text-[8px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-tighter">
+            Estimated Data
+          </div>
+        )}
+        <h2 className="text-2xl font-bold mb-2">{t.welcome}</h2>
+        <p className="text-green-100 text-sm mb-6 opacity-90">Listen to your land. Grow smarter crops.</p>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+            <div className="flex items-center gap-2 mb-1">
+              <Droplets size={16} className="text-green-300" />
+              <span className="text-xs font-medium text-green-200">Soil pH</span>
+            </div>
+            <div className="text-xl font-bold">{state.soil?.ph.toFixed(1) || '--'}</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+            <div className="flex items-center gap-2 mb-1">
+              <Thermometer size={16} className="text-orange-300" />
+              <span className="text-xs font-medium text-orange-200">Temp</span>
+            </div>
+            <div className="text-xl font-bold">{state.weather?.temp.toFixed(0) || '--'}°C</div>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-2 gap-4">
+        <button onClick={() => setActiveTab('soil')} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-left active:bg-gray-50 transition-colors">
+          <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-[#2D6A4F] mb-3">
+            <Droplets size={20} />
+          </div>
+          <h3 className="font-bold text-sm mb-1">{t.soil_intelligence}</h3>
+          <p className="text-[10px] text-gray-500">Check NPK & pH levels</p>
+        </button>
+        <button onClick={() => setActiveTab('crops')} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-left active:bg-gray-50 transition-colors">
+          <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mb-3">
+            <Sprout size={20} />
+          </div>
+          <h3 className="font-bold text-sm mb-1">{t.crop_advisor}</h3>
+          <p className="text-[10px] text-gray-500">Best crops for your land</p>
+        </button>
+        <button onClick={() => setActiveTab('disease')} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-left active:bg-gray-50 transition-colors">
+          <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-red-600 mb-3">
+            <Database size={20} />
+          </div>
+          <h3 className="font-bold text-sm mb-1">{t.disease_library}</h3>
+          <p className="text-[10px] text-gray-500">Identify & treat crop diseases</p>
+        </button>
+        <button onClick={() => setActiveTab('weather')} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-left active:bg-gray-50 transition-colors">
+          <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-3">
+            <CloudSun size={20} />
+          </div>
+          <h3 className="font-bold text-sm mb-1">{t.weather_alerts}</h3>
+          <p className="text-[10px] text-gray-500">Local weather & alerts</p>
+        </button>
+      </div>
+
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-gray-800">Smart Alerts</h2>
+          <span className="text-[10px] text-[#2D6A4F] font-bold uppercase tracking-wider">Live</span>
+        </div>
+        <div className="space-y-3">
+          {state.weather && state.weather.humidity > 80 && (
+            <AlertCard 
+              type="warning" 
+              title="Fungal Risk High" 
+              desc="Humidity is above 80%. Check crops for signs of fungus."
+            />
+          )}
+          {state.weather && state.weather.temp > 35 && (
+            <AlertCard 
+              type="danger" 
+              title="Heat Stress Alert" 
+              desc="Temperatures are high. Ensure adequate irrigation today."
+            />
+          )}
+          <AlertCard 
+            type="info" 
+            title="Ideal Sowing Window" 
+            desc="Current conditions are perfect for Mustard sowing."
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function AlertCard({ type, title, desc }: { type: 'warning' | 'danger' | 'info', title: string, desc: string }) {
+  const colors = {
+    warning: "bg-amber-50 border-amber-100 text-amber-800",
+    danger: "bg-red-50 border-red-100 text-red-800",
+    info: "bg-blue-50 border-blue-100 text-blue-800"
+  };
+  const icons = {
+    warning: <AlertTriangle size={18} className="text-amber-500" />,
+    danger: <AlertTriangle size={18} className="text-red-500" />,
+    info: <CloudSun size={18} className="text-blue-500" />
+  };
+
+  return (
+    <div className={cn("p-3 rounded-xl border flex gap-3", colors[type])}>
+      <div className="mt-0.5">{icons[type]}</div>
+      <div>
+        <h4 className="font-bold text-xs mb-0.5">{title}</h4>
+        <p className="text-[11px] opacity-80 leading-relaxed">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function SoilView({ state, t, onRefresh, onManualInput }: { state: AppState, t: any, onRefresh: () => void, onManualInput: () => void }) {
+  if (!state.soil) return <LoadingScreen />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-800">{t.soil_intelligence}</h2>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={onRefresh}
+            disabled={state.isRefreshing}
+            className={cn("p-2 rounded-lg bg-white border border-gray-200 text-gray-600 active:scale-95 transition-all", state.isRefreshing && "animate-spin")}
+          >
+            <Database size={16} />
+          </button>
+          {state.soil.isEstimated && (
+            <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">
+              ESTIMATED
+            </span>
+          )}
+        </div>
+      </div>
+      
+      {state.soil.isEstimated && (
+        <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-center justify-between gap-2 text-amber-800 text-[10px] leading-tight">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={14} className="shrink-0" />
+            Soil data service is currently busy. Showing estimated values.
+          </div>
+          <button 
+            onClick={onManualInput}
+            className="shrink-0 bg-amber-600 text-white px-2 py-1 rounded font-bold uppercase"
+          >
+            {t.manual_input}
+          </button>
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-8">
+        <div className="space-y-4">
+          <Gauge label={t.nitrogen} value={state.soil.nitrogen} max={200} unit="mg/kg" color="bg-blue-500" />
+          <Gauge label={t.phosphorus} value={state.soil.soc} max={100} unit="mg/kg" color="bg-purple-500" />
+          <Gauge label={t.potassium} value={120} max={300} unit="mg/kg" color="bg-orange-500" />
+        </div>
+
+        <div className="pt-6 border-t border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-gray-500">{t.ph_level}</span>
+            <span className={cn("px-3 py-1 rounded-full text-xs font-bold", 
+              state.soil.ph < 6 ? "bg-red-100 text-red-700" : 
+              state.soil.ph > 8 ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
+            )}>
+              {state.soil.ph < 6 ? 'Acidic' : state.soil.ph > 8 ? 'Alkaline' : 'Neutral'}
+            </span>
+          </div>
+          <div className="relative h-4 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 rounded-full">
+            <div 
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-gray-800 rounded-full shadow-md transition-all duration-500"
+              style={{ left: `${(state.soil.ph / 14) * 100}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
+            <span>0 (Acidic)</span>
+            <span>7 (Neutral)</span>
+            <span>14 (Alkaline)</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-green-50 border border-green-100 p-4 rounded-xl">
+        <h4 className="font-bold text-[#2D6A4F] text-sm mb-2">Expert Tip</h4>
+        <p className="text-xs text-green-700 leading-relaxed">
+          Your soil is slightly {state.soil.ph < 7 ? 'acidic' : 'alkaline'}. Consider adding {state.soil.ph < 7 ? 'lime' : 'gypsum'} to balance it for better wheat yield.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Gauge({ label, value, max, unit, color }: { label: string, value: number, max: number, unit: string, color: string }) {
+  const percentage = Math.min((value / max) * 100, 100);
+  return (
+    <div className="space-y-2">
+      <div className="flex justify-between text-xs">
+        <span className="font-medium text-gray-600">{label}</span>
+        <span className="font-bold text-gray-800">{value} {unit}</span>
+      </div>
+      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <motion.div 
+          initial={{ width: 0 }}
+          animate={{ width: `${percentage}%` }}
+          className={cn("h-full rounded-full", color)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any, onPreviousCropChange: (id: string) => void }) {
+  const [expandedCropId, setExpandedCropId] = useState<string | null>(null);
+
+  const calculateScore = (crop: any) => {
+    if (!state.soil) return 0;
+    let score = 100;
+    if (state.soil.ph < crop.minPh || state.soil.ph > crop.maxPh) score -= 30;
+    if (state.soil.nitrogen < 50 && crop.id === 'wheat') score -= 20;
+    return Math.max(score, 40);
+  };
+
+  const getMonthName = (month: number) => {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
+  };
+
+  const getRotationAdvice = () => {
+    if (!state.previousCropId) {
+      return {
+        nextCrop: CROPS.find(c => c.id === 'wheat'),
+        reason: t.no_previous_data,
+        benefit: t.cereal_benefit
+      };
+    }
+
+    const previousCrop = CROPS.find(c => c.id === state.previousCropId);
+    if (!previousCrop) return null;
+
+    let suggested: any = null;
+    let benefit = '';
+
+    if (previousCrop.rotationGroup === 'cereal') {
+      suggested = CROPS.find(c => c.rotationGroup === 'legume');
+      benefit = t.legume_benefit;
+    } else if (previousCrop.rotationGroup === 'legume') {
+      suggested = CROPS.find(c => c.rotationGroup === 'cereal');
+      benefit = t.cereal_benefit;
+    } else {
+      suggested = CROPS.find(c => c.rotationGroup === 'legume');
+      benefit = t.legume_benefit;
+    }
+
+    return {
+      nextCrop: suggested,
+      reason: t.rotation_reason,
+      benefit: benefit
+    };
+  };
+
+  const advice = getRotationAdvice();
+
+  return (
+    <div className="space-y-8">
+      {/* Rotation Advisor Section */}
+      <div className="bg-[#2D6A4F]/5 border border-[#2D6A4F]/10 rounded-2xl p-6 space-y-4">
+        <div className="flex items-center gap-2 text-[#2D6A4F]">
+          <Database size={20} />
+          <h3 className="font-bold text-lg">{t.crop_rotation}</h3>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-gray-400 uppercase">{t.select_previous_crop}</label>
+            <select 
+              value={state.previousCropId}
+              onChange={(e) => onPreviousCropChange(e.target.value)}
+              className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+            >
+              <option value="">-- Select --</option>
+              {CROPS.map(c => (
+                <option key={c.id} value={c.id}>{c.name[state.language] || c.name.en}</option>
+              ))}
+            </select>
+          </div>
+
+          {advice && advice.nextCrop && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white p-4 rounded-xl border border-[#2D6A4F]/20 shadow-sm space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider">{t.suggested_next}</span>
+                <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">Recommended</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-[#2D6A4F]">
+                  <Sprout size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-800">{advice.nextCrop.name[state.language] || advice.nextCrop.name.en}</h4>
+                  <p className="text-[10px] text-gray-500">{advice.reason}</p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-600 italic leading-relaxed border-t border-gray-50 pt-2">
+                "{advice.benefit}"
+              </p>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-gray-800">{t.crop_advisor}</h2>
+        {CROPS.map(crop => {
+          const score = calculateScore(crop);
+          const isExpanded = expandedCropId === crop.id;
+          return (
+            <div key={crop.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              <div 
+                className="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors"
+                onClick={() => setExpandedCropId(isExpanded ? null : crop.id)}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                    <img 
+                      src={state.cropImages?.[crop.id] || crop.image} 
+                      alt={crop.id} 
+                      className="w-full h-full object-cover" 
+                      referrerPolicy="no-referrer" 
+                    />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-800">{crop.name[state.language] || crop.name.en}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] text-gray-400 font-medium">{t.water_need}: {crop.waterRequirement}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="text-xs font-bold text-[#2D6A4F] mb-1">{score}% Match</div>
+                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-[#2D6A4F]" style={{ width: `${score}%` }}></div>
+                    </div>
+                  </div>
+                  <div className="text-gray-400">
+                    {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </div>
+                </div>
+              </div>
+              
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="border-t border-gray-50 bg-gray-50/50"
+                  >
+                    <div className="p-4 space-y-4">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Description</span>
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          {crop.description[state.language] || crop.description.en}
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{t.sowing_time}</span>
+                          <p className="text-xs font-bold text-gray-800">
+                            {crop.sowingMonths.map(getMonthName).join(', ')}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Soil Suitability</span>
+                          <p className="text-xs font-bold text-gray-800">
+                            {crop.soilType[state.language] || crop.soilType.en}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 pt-2">
+                        <div className="flex-1 bg-white p-2 rounded-lg border border-gray-100">
+                          <span className="text-[10px] text-gray-400 block mb-1">Ideal pH</span>
+                          <span className="text-xs font-bold text-[#2D6A4F]">{crop.minPh} - {crop.maxPh}</span>
+                        </div>
+                        <div className="flex-1 bg-white p-2 rounded-lg border border-gray-100">
+                          <span className="text-[10px] text-gray-400 block mb-1">Ideal Temp</span>
+                          <span className="text-xs font-bold text-orange-600">{crop.minTemp}°C - {crop.maxTemp}°C</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefresh: () => void }) {
+  if (!state.weather) return <LoadingScreen />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-800">{t.weather_alerts}</h2>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={onRefresh}
+            disabled={state.isRefreshing}
+            className={cn("p-2 rounded-lg bg-white border border-gray-200 text-gray-600 active:scale-95 transition-all", state.isRefreshing && "animate-spin")}
+          >
+            <CloudSun size={16} />
+          </button>
+          {state.weather.isEstimated && (
+            <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">
+              ESTIMATED
+            </span>
+          )}
+        </div>
+      </div>
+      
+      {state.weather.isEstimated && (
+        <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-center justify-between gap-2 text-amber-800 text-[10px] leading-tight">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={14} className="shrink-0" />
+            Weather service is currently busy. Showing estimated values.
+          </div>
+          <button 
+            onClick={onRefresh}
+            className="shrink-0 bg-amber-600 text-white px-2 py-1 rounded font-bold uppercase"
+          >
+            {t.retry}
+          </button>
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="text-4xl font-bold text-gray-800">{state.weather.temp.toFixed(0)}°C</div>
+            <div className="text-sm text-gray-500 capitalize mt-1">{state.weather.description}</div>
+          </div>
+          <img 
+            src={`https://openweathermap.org/img/wn/${state.weather.icon}@2x.png`} 
+            alt="Weather Icon" 
+            className="w-20 h-20"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
+          <WeatherStat icon={<Droplets size={16} />} label="Humidity" value={`${state.weather.humidity}%`} />
+          <WeatherStat icon={<Wind size={16} />} label="Wind" value={`${state.weather.windSpeed} km/h`} />
+          <WeatherStat icon={<CloudSun size={16} />} label="Rain" value={`${state.weather.rain} mm`} />
+        </div>
+      </div>
+
+      {state.weather.forecast && state.weather.forecast.length > 0 && (
+        <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-4">
+          <h3 className="text-sm font-bold text-gray-800 border-b border-gray-100 pb-2">{t.forecast_3day}</h3>
+          <div className="space-y-4">
+            {state.weather.forecast.map((day, i) => (
+              <div key={day.date} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
+                    <img 
+                      src={`https://openweathermap.org/img/wn/${day.icon}.png`} 
+                      alt="Weather Icon" 
+                      className="w-8 h-8"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-gray-800">
+                      {i === 0 ? t.today : new Date(day.date).toLocaleDateString(state.language === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'short' })}
+                    </div>
+                    <div className="text-[10px] text-gray-500 capitalize">{day.description}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <div className="text-xs font-bold text-gray-800">{day.high.toFixed(0)}° / {day.low.toFixed(0)}°</div>
+                    <div className="text-[10px] text-gray-400 font-medium">{t.high_low}</div>
+                  </div>
+                  <div className="text-right min-w-[60px]">
+                    <div className="text-xs font-bold text-blue-600">{day.rainProb}%</div>
+                    <div className="text-[10px] text-gray-400 font-medium">{t.rain_prob}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
+        <h4 className="font-bold text-blue-800 text-sm mb-2">Irrigation Advice</h4>
+        <p className="text-xs text-blue-700 leading-relaxed">
+          {state.weather.rain > 0 
+            ? "Rain detected. Skip irrigation for today to save water." 
+            : "No rain expected. Ensure regular watering for Rabi crops."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function WeatherStat({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="text-gray-400">{icon}</div>
+      <span className="text-[10px] text-gray-500 font-medium">{label}</span>
+      <span className="text-sm font-bold text-gray-800">{value}</span>
+    </div>
+  );
+}
+
+function DiseaseView({ state, t }: { state: AppState, t: any }) {
+  const [search, setSearch] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [userImages, setUserImages] = useState<Record<string, string[]>>({});
+  const [selectedImage, setSelectedImage] = useState<{ url: string, diseaseId?: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [activeDiseaseId, setActiveDiseaseId] = useState<string | null>(null);
+  
+  const filteredDiseases = DISEASES.filter(d => 
+    (d.name[state.language] || d.name.en).toLowerCase().includes(search.toLowerCase()) ||
+    (d.crop).toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Get all images for the community showcase
+  const allImages = DISEASES.flatMap(d => {
+    const dynamicImages = state.diseaseImages?.[d.id] || [];
+    return [
+      ...(d.images || []).map(url => ({ url, diseaseId: d.id, name: d.name[state.language] || d.name.en })),
+      ...dynamicImages.map(url => ({ url, diseaseId: d.id, name: d.name[state.language] || d.name.en })),
+      ...(userImages[d.id] || []).map(url => ({ url, diseaseId: d.id, name: d.name[state.language] || d.name.en }))
+    ];
+  });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAnalyzing(true);
+    setAnalysisResult(null);
+
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = (reader.result as string).split(',')[1];
+        const result = await analyzeCropImage(base64String, file.type, state.language);
+        setAnalysisResult(result);
+        setIsAnalyzing(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>, diseaseId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setUserImages(prev => ({
+        ...prev,
+        [diseaseId]: [...(prev[diseaseId] || []), base64String]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const analyzeSelectedImage = async () => {
+    if (!selectedImage) return;
+    
+    setIsAnalyzing(true);
+    setAnalysisResult(null);
+    const imageUrl = selectedImage.url;
+    setSelectedImage(null);
+
+    try {
+      // If it's a base64 string from user upload
+      let base64String = '';
+      let mimeType = 'image/jpeg';
+      
+      if (imageUrl.startsWith('data:')) {
+        const parts = imageUrl.split(',');
+        base64String = parts[1];
+        mimeType = parts[0].split(':')[1].split(';')[0];
+      } else {
+        // For sample images, we'd need to fetch and convert to base64
+        // For this demo, we'll just simulate or use a placeholder message
+        // In a real app, you'd fetch the image as a blob
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        mimeType = blob.type;
+        const reader = new FileReader();
+        base64String = await new Promise((resolve) => {
+          reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      const result = await analyzeCropImage(base64String, mimeType, state.language);
+      setAnalysisResult(result);
+      setIsAnalyzing(false);
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      setIsAnalyzing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 pb-10">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-800">{t.disease_library}</h2>
+        <button 
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isAnalyzing}
+          className="flex items-center gap-2 bg-[#2D6A4F] text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg active:scale-95 transition-all disabled:opacity-50"
+        >
+          {isAnalyzing ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
+          {t.scan_crop}
+        </button>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleImageUpload} 
+          accept="image/*" 
+          className="hidden" 
+        />
+      </div>
+
+      {/* AI Analysis Section */}
+      <AnimatePresence>
+        {(isAnalyzing || analysisResult) && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-white rounded-2xl border-2 border-[#2D6A4F]/20 overflow-hidden shadow-sm"
+          >
+            <div className="bg-[#2D6A4F]/5 p-4 border-b border-[#2D6A4F]/10 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[#2D6A4F]">
+                <Sprout size={20} />
+                <h3 className="font-bold">{t.analysis_result}</h3>
+              </div>
+              <button onClick={() => setAnalysisResult(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6">
+              {isAnalyzing ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-4">
+                  <Loader2 size={40} className="text-[#2D6A4F] animate-spin" />
+                  <p className="text-sm text-gray-500 font-medium">{t.analyzing}</p>
+                </div>
+              ) : (
+                <div className="prose prose-sm max-w-none text-gray-700">
+                  <div className="markdown-body">
+                    <ReactMarkdown>{analysisResult || ''}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Community Showcase */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-gray-800">{t.community_images}</h3>
+          <span className="text-[10px] text-gray-400 font-medium">{allImages.length} Images</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {allImages.map((img, idx) => (
+            <motion.div 
+              key={`community-${idx}`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSelectedImage({ url: img.url, diseaseId: img.diseaseId })}
+              className="shrink-0 w-32 h-32 rounded-2xl overflow-hidden border border-gray-100 shadow-sm relative group cursor-pointer"
+            >
+              <img src={img.url} alt="Community" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                <span className="text-[8px] text-white font-bold truncate">{img.name}</span>
+              </div>
+            </motion.div>
+          ))}
+          {allImages.length === 0 && (
+            <div className="w-full h-32 bg-gray-50 rounded-2xl flex items-center justify-center border border-dashed border-gray-200">
+              <span className="text-xs text-gray-400">{t.no_images}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <input 
+          type="text" 
+          placeholder="Search disease or crop..." 
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/20"
+        />
+      </div>
+
+      <div className="space-y-6">
+        {filteredDiseases.map(d => (
+          <div key={d.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-bold text-lg text-gray-800">{d.name[state.language] || d.name.en}</h4>
+                <span className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider">{d.crop}</span>
+              </div>
+              <span className={cn("text-[10px] px-2 py-1 rounded-full font-bold uppercase", 
+                d.severity === 'High' ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"
+              )}>
+                {d.severity} Risk
+              </span>
+            </div>
+            
+            {/* Image Gallery */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-gray-400 uppercase block">{t.gallery}</span>
+                <button 
+                  onClick={() => {
+                    setActiveDiseaseId(d.id);
+                    galleryInputRef.current?.click();
+                  }}
+                  className="text-[10px] font-bold text-[#2D6A4F] flex items-center gap-1 hover:underline"
+                >
+                  <Upload size={10} />
+                  {t.upload_to_gallery}
+                </button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {/* Dynamic/Sample Images */}
+                {[...(d.images || []), ...(state.diseaseImages?.[d.id] || [])].map((img, idx) => (
+                  <div 
+                    key={`sample-${idx}`} 
+                    onClick={() => setSelectedImage({ url: img, diseaseId: d.id })}
+                    className="shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-gray-100 cursor-pointer active:scale-95 transition-transform bg-gray-50"
+                  >
+                    <img src={img} alt={d.id} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                ))}
+                {/* User Uploaded Images */}
+                {userImages[d.id]?.map((img, idx) => (
+                  <div 
+                    key={`user-${idx}`} 
+                    onClick={() => setSelectedImage({ url: img, diseaseId: d.id })}
+                    className="shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-[#2D6A4F]/20 cursor-pointer active:scale-95 transition-transform"
+                  >
+                    <img src={img} alt="User upload" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                ))}
+                {(!d.images || d.images.length === 0) && (!userImages[d.id] || userImages[d.id].length === 0) && (
+                  <div className="w-full h-24 bg-gray-50 rounded-lg flex items-center justify-center border border-dashed border-gray-200">
+                    <span className="text-[10px] text-gray-400">{t.no_images}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase block">Symptoms</span>
+              <p className="text-xs text-gray-600 leading-relaxed">{d.symptoms[state.language] || d.symptoms.en}</p>
+            </div>
+
+            <div className="bg-green-50 p-4 rounded-xl space-y-4 border border-green-100">
+              <div className="flex items-center gap-2 text-[#2D6A4F]">
+                <Database size={16} />
+                <span className="text-xs font-bold uppercase tracking-tight">{t.treatment_steps}</span>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-green-700/60 uppercase">{t.dosage}</span>
+                    <p className="text-xs font-bold text-green-900">{d.dosage[state.language] || d.dosage.en}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-green-700/60 uppercase">{t.application}</span>
+                    <p className="text-xs font-bold text-green-900">{d.application[state.language] || d.application.en}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-green-700/60 uppercase">Steps</span>
+                  <ul className="space-y-1.5">
+                    {(d.steps[state.language] || d.steps.en).map((step, idx) => (
+                      <li key={idx} className="flex gap-2 text-xs text-green-800 leading-tight">
+                        <span className="font-bold text-green-600">{idx + 1}.</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        {filteredDiseases.length === 0 && (
+          <div className="text-center py-10 text-gray-400">
+            <Search size={40} className="mx-auto mb-2 opacity-20" />
+            <p className="text-sm">No diseases found matching your search.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Image Detail Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] bg-black/90 flex flex-col items-center justify-center p-6 backdrop-blur-md"
+          >
+            <button 
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-6 right-6 p-2 text-white/60 hover:text-white transition-colors"
+            >
+              <X size={32} />
+            </button>
+            
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-lg space-y-6"
+            >
+              <div className="rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+                <img src={selectedImage.url} alt="Selected" className="w-full aspect-square object-cover" referrerPolicy="no-referrer" />
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={analyzeSelectedImage}
+                  className="w-full bg-[#2D6A4F] text-white py-4 rounded-2xl font-bold shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <Search size={20} />
+                  Analyze with AI
+                </button>
+                <button 
+                  onClick={() => setSelectedImage(null)}
+                  className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold hover:bg-white/20 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <input 
+        type="file" 
+        ref={galleryInputRef} 
+        onChange={(e) => activeDiseaseId && handleGalleryUpload(e, activeDiseaseId)} 
+        accept="image/*" 
+        className="hidden" 
+      />
+    </div>
+  );
+}
+
+function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, onSave: (soil: SoilData) => void }) {
+  const [ph, setPh] = useState('7.0');
+  const [nitrogen, setNitrogen] = useState('100');
+  const [soc, setSoc] = useState('1.5');
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm"
+    >
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl"
+      >
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="font-bold text-gray-800">{t.manual_input}</h3>
+          <button onClick={onClose} className="p-1 text-gray-400"><X size={20} /></button>
+        </div>
+        
+        <div className="p-6 space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500 uppercase">{t.ph_level}</label>
+            <input 
+              type="number" 
+              step="0.1"
+              value={ph}
+              onChange={(e) => setPh(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500 uppercase">{t.nitrogen} (mg/kg)</label>
+            <input 
+              type="number" 
+              value={nitrogen}
+              onChange={(e) => setNitrogen(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500 uppercase">{t.soc} (g/kg)</label>
+            <input 
+              type="number" 
+              step="0.1"
+              value={soc}
+              onChange={(e) => setSoc(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="p-4 bg-gray-50 flex gap-3">
+          <button 
+            onClick={onClose}
+            className="flex-1 py-3 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
+          >
+            {t.cancel}
+          </button>
+          <button 
+            onClick={() => onSave({
+              ph: parseFloat(ph),
+              nitrogen: parseFloat(nitrogen),
+              soc: parseFloat(soc),
+              texture: 'Loamy',
+              sand: 300,
+              silt: 400,
+              clay: 300,
+              isEstimated: false
+            })}
+            className="flex-1 py-3 text-sm font-bold bg-[#2D6A4F] text-white rounded-xl shadow-lg active:scale-95 transition-all"
+          >
+            {t.save}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void, t: any }) {
+  const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
+
+  const startListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = state.language === 'hi' ? 'hi-IN' : 'en-IN';
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onresult = async (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      handleUserMessage(transcript);
+    };
+    recognition.start();
+  };
+
+  const handleUserMessage = async (text: string) => {
+    setMessages(prev => [...prev, { role: 'user', text }]);
+    setIsTyping(true);
+    
+    const response = await getGeminiResponse(text, state.language, {
+      soil: state.soil,
+      weather: state.weather,
+      location: state.location?.name || 'Unknown'
+    });
+    
+    setIsTyping(false);
+    setMessages(prev => [...prev, { role: 'ai', text: response }]);
+    
+    // Speak response
+    const utterance = new SpeechSynthesisUtterance(response);
+    utterance.lang = state.language === 'hi' ? 'hi-IN' : 'en-IN';
+    window.speechSynthesis.speak(utterance);
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 100 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 100 }}
+      className="fixed inset-0 z-[60] bg-white flex flex-col"
+    >
+      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+            <MessageSquare size={18} />
+          </div>
+          <h2 className="font-bold">KisanMitra AI</h2>
+        </div>
+        <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600">
+          <X size={24} />
+        </button>
+      </div>
+
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.length === 0 && (
+          <div className="text-center py-10 space-y-4">
+            <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center text-purple-600 mx-auto">
+              <Mic size={40} />
+            </div>
+            <h3 className="font-bold text-gray-800">How can I help you today?</h3>
+            <p className="text-sm text-gray-500 px-10">Ask me about your soil, weather, or which crops to sow.</p>
+            <div className="flex flex-wrap justify-center gap-2 pt-4">
+              {['मेरी मिट्टी कैसी है?', 'आज मौसम कैसा है?', 'गेहूं कब बोएं?'].map(q => (
+                <button 
+                  key={q} 
+                  onClick={() => handleUserMessage(q)}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-full text-gray-600 transition-colors"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={cn("flex", m.role === 'user' ? "justify-end" : "justify-start")}>
+            <div className={cn("max-w-[80%] p-3 rounded-2xl text-sm shadow-sm", 
+              m.role === 'user' ? "bg-[#2D6A4F] text-white rounded-tr-none" : "bg-gray-100 text-gray-800 rounded-tl-none"
+            )}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-gray-100 p-3 rounded-2xl rounded-tl-none flex gap-1">
+              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></div>
+              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-6 border-t border-gray-100 flex flex-col items-center gap-4">
+        <button 
+          onClick={startListening}
+          disabled={isListening}
+          className={cn(
+            "w-20 h-20 rounded-full flex items-center justify-center text-white shadow-2xl transition-all active:scale-90",
+            isListening ? "bg-red-500 animate-pulse" : "bg-purple-600"
+          )}
+        >
+          <Mic size={32} />
+        </button>
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+          {isListening ? 'Listening...' : 'Tap to Speak'}
+        </p>
+      </div>
+    </motion.div>
+  );
+}

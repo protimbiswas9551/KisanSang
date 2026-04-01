@@ -1,0 +1,8 @@
+{
+  "name": "KisanSense",
+  "description": "Indian Crops Real-Time Intelligence Platform providing soil, weather, and crop advice in local languages.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ]
+}
