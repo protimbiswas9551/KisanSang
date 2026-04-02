@@ -40,8 +40,7 @@ export interface Crop {
   sowingMonths: number[];
   description: { [key: string]: string };
   soilType: { [key: string]: string };
-  rotationGroup: 'cereal' | 'legume' | 'oilseed';
-  image: string;
+  rotationGroup: 'cereal' | 'legume' | 'oilseed' | 'vegetable' | 'fruit';
 }
 
 export interface Disease {
@@ -54,7 +53,6 @@ export interface Disease {
   dosage: { [key: string]: string };
   application: { [key: string]: string };
   severity: 'Low' | 'Medium' | 'High';
-  images?: string[];
 }
 
 export type Language = 'hi' | 'ta' | 'te' | 'mr' | 'bn' | 'gu' | 'kn' | 'en';
@@ -68,6 +66,4 @@ export interface AppState {
   error: string | null;
   isRefreshing?: boolean;
   previousCropId?: string;
-  cropImages?: Record<string, string>;
-  diseaseImages?: Record<string, string[]>;
 }

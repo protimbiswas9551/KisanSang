@@ -26,8 +26,7 @@ export const CROPS: Crop[] = [
       en: 'Loamy, Clayey', hi: 'दोमट, चिकनी', bn: 'দোআঁশ, এঁটেল', mr: 'लोमी, चिकणमाती',
       te: 'లోమీ, క్లేయీ', ta: 'வண்டல், களிமண்', gu: 'ગોરાડુ, ચીકણી', kn: 'ಲೋಮಿ, ಜೇಡಿಮಣ್ಣು'
     },
-    rotationGroup: 'cereal',
-    image: 'https://images.unsplash.com/photo-1501430654243-c93fce111d99?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'cereal'
   },
   {
     id: 'rice',
@@ -54,8 +53,7 @@ export const CROPS: Crop[] = [
       en: 'Clayey, Loamy', hi: 'चिकनी, दोमट', bn: 'এঁটেল, দোআঁশ', mr: 'चिकणमाती, लोमी',
       te: 'క్లేయీ, లోమీ', ta: 'களிமண், வண்டல்', gu: 'ચીકણી, ગોરાડુ', kn: 'ಜೇಡಿಮಣ್ಣು, ಲೋಮಿ'
     },
-    rotationGroup: 'cereal',
-    image: 'https://images.unsplash.com/photo-1536633100187-00569bb600f2?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'cereal'
   },
   {
     id: 'mustard',
@@ -82,8 +80,7 @@ export const CROPS: Crop[] = [
       en: 'Sandy Loam, Loamy', hi: 'रेतीली दोमट, दोमट', bn: 'বেলে দোআঁশ, দোআঁশ', mr: 'रेताड लोमी, लोमी',
       te: 'ఇసుక లోమీ, లోమీ', ta: 'மணல் வண்டல், வண்டல்', gu: 'રેતાળ ગોરાડુ, ગોરાડુ', kn: 'ಮರಳು ಮಿಶ್ರಿತ ಲೋಮಿ, ಲೋಮಿ'
     },
-    rotationGroup: 'oilseed',
-    image: 'https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'oilseed'
   },
   {
     id: 'moong',
@@ -110,8 +107,7 @@ export const CROPS: Crop[] = [
       en: 'Loamy, Sandy Loam', hi: 'दोमट, रेतीली दोमट', bn: 'দোআঁশ, বেলে দোআঁশ', mr: 'लोमी, रेताड लोमी',
       te: 'లోమీ, ఇసుక లోమీ', ta: 'வண்டல், மணல் வண்டல்', gu: 'ગોરાડુ, રેતાળ ગોરાડુ', kn: 'ಲೋಮಿ, ಮರಳು ಮಿಶ್ರಿತ ಲೋಮಿ'
     },
-    rotationGroup: 'legume',
-    image: 'https://images.unsplash.com/photo-1599590984717-9494326f5647?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'legume'
   },
   {
     id: 'maize',
@@ -138,8 +134,7 @@ export const CROPS: Crop[] = [
       en: 'Loamy, Sandy Loam', hi: 'दोमट, रेतीली दोमट', bn: 'দোআঁশ, বেলে দোআঁশ', mr: 'लोमी, रेताड लोमी',
       te: 'లోమీ, ఇసుక లోమీ', ta: 'வண்டல், மணல் வண்டல்', gu: 'ગોરાડુ, રેતાળ ગોરાડુ', kn: 'ಲೋಮಿ, ಮರಳು ಮಿಶ್ರಿತ ಲೋಮಿ'
     },
-    rotationGroup: 'cereal',
-    image: 'https://images.unsplash.com/photo-1551739440-5dd934d3a94a?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'cereal'
   },
   {
     id: 'sugarcane',
@@ -166,8 +161,7 @@ export const CROPS: Crop[] = [
       en: 'Clayey, Loamy', hi: 'चिकनी, दोमट', bn: 'এঁটেল, দোআঁশ', mr: 'चिकणमाती, लोमी',
       te: 'క్లేయీ, లోమీ', ta: 'களிமண், வண்டல்', gu: 'ચીકણી, ગોરાડુ', kn: 'ಜೇಡಿಮಣ್ಣು, ಲೋಮಿ'
     },
-    rotationGroup: 'cereal',
-    image: 'https://images.unsplash.com/photo-1594488687129-7b3bc96adbe3?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'cereal'
   },
   {
     id: 'cotton',
@@ -194,8 +188,7 @@ export const CROPS: Crop[] = [
       en: 'Black Soil, Alluvial', hi: 'काली मिट्टी, जलोढ़', bn: 'কৃষ্ণ মৃত্তিকা, পলি মাটি', mr: 'काळी माती, गाळाची माती',
       te: 'నల్ల రేగడి నేల, అల్లూవియల్', ta: 'கரிசல் மண், வண்டல் மண்', gu: 'કાળી માટી, કાંપની માટી', kn: 'ಕಪ್ಪು ಮಣ್ಣು, ಮೆಕ್ಕಲು ಮಣ್ಣು'
     },
-    rotationGroup: 'oilseed',
-    image: 'https://images.unsplash.com/photo-1594904351111-a072f80b1a71?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'oilseed'
   },
   {
     id: 'potato',
@@ -222,8 +215,7 @@ export const CROPS: Crop[] = [
       en: 'Sandy Loam', hi: 'बलुई दोमट', bn: 'বেলে দোআঁশ', mr: 'रेताळ लोम',
       te: 'ఇసుక లోమ్', ta: 'மணல் கலந்த வண்டல் மண்', gu: 'રેતાળ ગોરાડુ', kn: 'ಮರಳು ಮಿಶ್ರಿತ ಲೋಮ್'
     },
-    rotationGroup: 'vegetable',
-    image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'vegetable'
   },
   {
     id: 'tomato',
@@ -266,8 +258,7 @@ export const CROPS: Crop[] = [
       en: 'Deep, well-drained Loam', hi: 'गहरी, अच्छी जल निकासी वाली दोमट', bn: 'গভীর, সুনিষ্কাশিত দোআঁশ', mr: 'खोल, पाण्याचा निचरा होणारी लोम माती',
       te: 'లోతైన, మంచి నీటి పారుదల గల లోమ్', ta: 'ஆழமான, நல்ல வடிகால் வசதியுள்ள வண்டல் மண்', gu: 'ઊંડી, સારી નિકાલવાળી ગોરાડુ માટી', kn: 'ಆಳವಾದ, ಉತ್ತಮ ನೀರು ಹರಿಯುವ ಲೋಮ್'
     },
-    rotationGroup: 'fruit',
-    image: 'https://images.unsplash.com/photo-1557800636-894a64c1696f?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'fruit'
   },
   {
     id: 'banana',
@@ -294,8 +285,7 @@ export const CROPS: Crop[] = [
       en: 'Rich, well-drained Loam', hi: 'समृद्ध, अच्छी जल निकासी वाली दोमट', bn: 'উর্বর, সুনিষ্কাশিত দোআঁশ', mr: 'सुपीक, पाण्याचा निचरा होणारी लोम माती',
       te: 'సారవంతమైన, మంచి నీటి పారుదల గల లోమ్', ta: 'வளமான, நல்ல வடிகால் வசதியுள்ள வண்டல் மண்', gu: 'ફળદ્રુપ, સારી નિકાલવાળી ગોરાડુ માટી', kn: 'ಫಲವತ್ತಾದ, ಉತ್ತಮ ನೀರು ಹರಿಯುವ ಲೋಮ್'
     },
-    rotationGroup: 'fruit',
-    image: 'https://images.unsplash.com/photo-1571771894821-ad9902412746?auto=format&fit=crop&q=80&w=1000'
+    rotationGroup: 'fruit'
   }
 ];
 
@@ -347,11 +337,7 @@ export const DISEASES: Disease[] = [
       te: 'ఆకులపై స్ప్రే', ta: 'இலைகளில் தெளித்தல்',
       gu: 'પાંદડા પર છંટকાવ', kn: 'ಎಲೆಗಳ ಮೇಲೆ ಸಿಂಪಡಣೆ'
     },
-    severity: 'High',
-    images: [
-      'https://images.pexels.com/photos/265216/pexels-photo-265216.jpeg?auto=compress&cs=tinysrgb&w=1000',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Wheat_leaf_rust_on_wheat.jpg/640px-Wheat_leaf_rust_on_wheat.jpg'
-    ]
+    severity: 'High'
   },
   {
     id: 'mustard_aphids',
@@ -433,11 +419,7 @@ export const DISEASES: Disease[] = [
       te: '10-15 రోజుల వ్యవధిలో స్ప్రే చేయండి', ta: '10-15 நாட்கள் இடைவெளியில் தெளிக்கவும்',
       gu: '૧૦-૧૫ દિવસના અંતરે છંટકાવ કરો', kn: '10-15 ದಿನಗಳ ಅಂತರದಲ್ಲಿ ಸಿಂಪಡಿಸಿ'
     },
-    severity: 'High',
-    images: [
-      'https://images.unsplash.com/photo-1592919016327-5196f024553a?auto=format&fit=crop&q=80&w=1000',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Rice_Blast_Disease.jpg/640px-Rice_Blast_Disease.jpg'
-    ]
+    severity: 'High'
   },
   {
     id: 'mustard_aphids',
@@ -480,11 +462,7 @@ export const DISEASES: Disease[] = [
       te: 'అన్ని ఆకులపై పూర్తిగా స్ప్రే చేయండి', ta: 'அனைத்து இலைகளிலும் முழுமையாக தெளிக்கவும்',
       gu: 'બધા પાંદડા પર સંપૂર્ણ રીતે છંટকાવ કરો', kn: 'ಎಲ್ಲಾ ಎಲೆಗಳ ಮೇಲೆ ಸಂಪೂರ್ಣವಾಗಿ ಸಿಂಪಡಿಸಿ'
     },
-    severity: 'Medium',
-    images: [
-      'https://images.pexels.com/photos/1105189/pexels-photo-1105189.jpeg?auto=compress&cs=tinysrgb&w=1000',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Aphids_on_a_leaf.jpg/640px-Aphids_on_a_leaf.jpg'
-    ]
+    severity: 'Medium'
   },
   {
     id: 'cotton_bollworm',
@@ -525,11 +503,7 @@ export const DISEASES: Disease[] = [
       te: 'కాయలపై స్ప్రే చేయండి', ta: 'காய்கள் மீது தெளிக்கவும்',
       gu: 'જીંડવા પર છંટકાવ કરો', kn: 'ಕಾಯಿಗಳ ಮೇಲೆ ಸಿಂಪಡಿಸಿ'
     },
-    severity: 'High',
-    images: [
-      'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=1000',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Helicoverpa_armigera_larva.jpg/640px-Helicoverpa_armigera_larva.jpg'
-    ]
+    severity: 'High'
   },
   {
     id: 'maize_downy_mildew',
@@ -570,11 +544,7 @@ export const DISEASES: Disease[] = [
       te: 'విత్తన శుద్ధి లేదా ఆకులపై స్ప్రే', ta: 'விதை நேர்த்தி அல்லது இலைகளில் தெளித்தல்',
       gu: 'બીજ માવજત અથવા પાંદડા પર છંટકાવ', kn: 'ಬೀಜೋಪಚಾರ ಅಥವಾ ಎಲೆಗಳ ಮೇಲೆ ಸಿಂಪಡಣೆ'
     },
-    severity: 'High',
-    images: [
-      'https://images.unsplash.com/photo-1551739440-5dd934d3a94a?auto=format&fit=crop&q=80&w=1000',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Peronosclerospora_sorghi.jpg/640px-Peronosclerospora_sorghi.jpg'
-    ]
+    severity: 'High'
   },
   {
     id: 'potato_late_blight',
@@ -615,11 +585,7 @@ export const DISEASES: Disease[] = [
       te: 'ఆకులపై స్ప్రే', ta: 'இலைகளில் தெளித்தல்',
       gu: 'પાંદડા પર છંટકાવ', kn: 'ಎಲೆಗಳ ಮೇಲೆ ಸಿಂಪಡಣೆ'
     },
-    severity: 'High',
-    images: [
-      'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=1000',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Late_blight_on_potato_leaf_2.jpg/640px-Late_blight_on_potato_leaf_2.jpg'
-    ]
+    severity: 'High'
   },
   {
     id: 'tomato_leaf_curl',
@@ -660,11 +626,7 @@ export const DISEASES: Disease[] = [
       te: 'ఆకులపై స్ప్రే', ta: 'இலைகளில் தெளித்தல்',
       gu: 'પાંદડા પર છંટકાવ', kn: 'ಎಲೆಗಳ ಮೇಲೆ ಸಿಂಪಡಣೆ'
     },
-    severity: 'Medium',
-    images: [
-      'https://images.unsplash.com/photo-1518977822534-7049a61ee0c2?auto=format&fit=crop&q=80&w=1000',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Tomato_leaf_curl_virus.jpg/640px-Tomato_leaf_curl_virus.jpg'
-    ]
+    severity: 'Medium'
   },
   {
     id: 'citrus_canker',
@@ -705,11 +667,7 @@ export const DISEASES: Disease[] = [
       te: 'అన్ని భాగాలపై పూర్తిగా స్ప్రే చేయండి', ta: 'அனைத்து பகுதிகளிலும் முழுமையாக தெளிக்கவும்',
       gu: 'બધા ભાગો પર સંપૂર્ણ રીતે છંટકાવ કરો', kn: 'ಎಲ್ಲಾ ಭಾಗಗಳ ಮೇಲೆ ಸಂಪೂರ್ಣವಾಗಿ ಸಿಂಪಡಿಸಿ'
     },
-    severity: 'Medium',
-    images: [
-      'https://images.unsplash.com/photo-1557800636-894a64c1696f?auto=format&fit=crop&q=80&w=1000',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Citrus_canker_on_leaf.jpg/640px-Citrus_canker_on_leaf.jpg'
-    ]
+    severity: 'Medium'
   },
   {
     id: 'banana_bunchy_top',
@@ -750,11 +708,7 @@ export const DISEASES: Disease[] = [
       te: 'కాండం మరియు మొదలు వద్ద స్ప్రే చేయండి', ta: 'தண்டு மற்றும் அடிப்பகுதியில் தெளிக்கவும்',
       gu: 'થડ અને પાયા પર છંટકાવ કરો', kn: 'ಕಾಂಡ ಮತ್ತು ಬುಡದ ಮೇಲೆ ಸಿಂಪಡಿಸಿ'
     },
-    severity: 'High',
-    images: [
-      'https://images.unsplash.com/photo-1571771894821-ad990241274d?auto=format&fit=crop&q=80&w=1000',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/BananaBunchyTopVirus.jpg/640px-BananaBunchyTopVirus.jpg'
-    ]
+    severity: 'High'
   }
 ];
 
@@ -789,8 +743,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     treatment_steps: 'Treatment Steps',
     disease_library: 'Disease Library',
     scan_crop: 'Scan Crop',
-    upload_image: 'Upload an image of the affected plant',
-    analyzing: 'Analyzing image...',
     analysis_result: 'AI Analysis Result',
     potential_diseases: 'Potential Diseases',
     ai_advice: 'AI Advice',
@@ -808,10 +760,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     high_low: 'High / Low',
     rain_prob: 'Rain Prob.',
     today: 'Today',
-    gallery: 'Disease Gallery',
-    community_images: 'Community Images',
-    upload_to_gallery: 'Upload to Gallery',
-    no_images: 'No images available',
     analyzing_crop: 'Analyzing your crop...',
     select_language: 'Select Language',
   },
@@ -845,8 +793,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     treatment_steps: 'उपचार के चरण',
     disease_library: 'रोग पुस्तकालय',
     scan_crop: 'फसल स्कैन करें',
-    upload_image: 'प्रभावित पौधे की एक छवि अपलोड करें',
-    analyzing: 'छवि का विश्लेषण हो रहा है...',
     analysis_result: 'एआई विश्लेषण परिणाम',
     potential_diseases: 'संभावित रोग',
     ai_advice: 'एआई सलाह',
@@ -864,10 +810,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     high_low: 'अधिकतम / न्यूनतम',
     rain_prob: 'बारिश की संभावना',
     today: 'आज',
-    gallery: 'रोग गैलरी',
-    community_images: 'सामुदायिक चित्र',
-    upload_to_gallery: 'गैलरी में अपलोड करें',
-    no_images: 'कोई चित्र उपलब्ध नहीं है',
     analyzing_crop: 'आपकी फसल का विश्लेषण हो रहा है...',
     select_language: 'भाषा चुनें',
   },
@@ -901,8 +843,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     treatment_steps: 'চিকিত্সার ধাপ',
     disease_library: 'রোগের লাইব্রেরি',
     scan_crop: 'ফসল স্ক্যান করুন',
-    upload_image: 'আক্রান্ত উদ্ভিদের একটি ছবি আপলোড করুন',
-    analyzing: 'ছবি বিশ্লেষণ করা হচ্ছে...',
     analysis_result: 'এআই বিশ্লেষণের ফলাফল',
     potential_diseases: 'সম্ভাব্য রোগ',
     ai_advice: 'এআই পরামর্শ',
@@ -920,10 +860,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     high_low: 'সর্বোচ্চ / সর্বনিম্ন',
     rain_prob: 'বৃষ্টির সম্ভাবনা',
     today: 'আজ',
-    gallery: 'রোগের গ্যালারি',
-    community_images: 'কমিউনিটি ছবি',
-    upload_to_gallery: 'গ্যালারিতে আপলোড করুন',
-    no_images: 'কোনো ছবি পাওয়া যায়নি',
     analyzing_crop: 'আপনার ফসল বিশ্লেষণ করা হচ্ছে...',
     select_language: 'ভাষা নির্বাচন করুন',
   },
@@ -957,8 +893,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     treatment_steps: 'उपचार पायऱ्या',
     disease_library: 'रोग ग्रंथालय',
     scan_crop: 'पीक स्कॅन करा',
-    upload_image: 'बाधित रोपाचा फोटो अपलोड करा',
-    analyzing: 'फोटोचे विश्लेषण होत आहे...',
     analysis_result: 'एआय विश्लेषण निकाल',
     potential_diseases: 'संभाव्य रोग',
     ai_advice: 'एआय सल्ला',
@@ -976,10 +910,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     high_low: 'जास्तीत जास्त / किमान',
     rain_prob: 'पावसाची शक्यता',
     today: 'आज',
-    gallery: 'रोग गॅलरी',
-    community_images: 'सामुदायिक फोटो',
-    upload_to_gallery: 'गॅलरीमध्ये अपलोड करा',
-    no_images: 'फोटो उपलब्ध नाहीत',
     analyzing_crop: 'तुमच्या पिकाचे विश्लेषण होत आहे...',
     select_language: 'भाषा निवडा',
   },
@@ -1013,8 +943,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     treatment_steps: 'చికిత్స దశలు',
     disease_library: 'వ్యాధి లైబ్రరీ',
     scan_crop: 'పంటను స్కాన్ చేయండి',
-    upload_image: 'ప్రభావిత మొక్క యొక్క చిత్రాన్ని అప్‌లోడ్ చేయండి',
-    analyzing: 'చిత్రాన్ని విశ్లేషిస్తోంది...',
     analysis_result: 'AI విశ్లేషణ ఫలితం',
     potential_diseases: 'సంభావ్య వ్యాధులు',
     ai_advice: 'AI సలహా',
@@ -1032,10 +960,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     high_low: 'గరిష్ట / కనిష్ట',
     rain_prob: 'వర్షం అవకాశం',
     today: 'నేడు',
-    gallery: 'వ్యాధి గ్యాలరీ',
-    community_images: 'కమ్యూనిటీ చిత్రాలు',
-    upload_to_gallery: 'గ్యాలరీకి అప్‌లోడ్ చేయండి',
-    no_images: 'చిత్రాలు అందుబాటులో లేవు',
     analyzing_crop: 'మీ పంటను విశ్లేషిస్తోంది...',
     select_language: 'భాషను ఎంచుకోండి',
   },
@@ -1069,8 +993,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     treatment_steps: 'சிகிச்சை படிகள்',
     disease_library: 'நோய் நூலகம்',
     scan_crop: 'பயிரை ஸ்கேன் செய்',
-    upload_image: 'பாதிக்கப்பட்ட செடியின் படத்தை பதிவேற்றவும்',
-    analyzing: 'படம் பகுப்பாய்வு செய்யப்படுகிறது...',
     analysis_result: 'AI பகுப்பாய்வு முடிவு',
     potential_diseases: 'சாத்தியமான நோய்கள்',
     ai_advice: 'AI ஆலோசனை',
@@ -1088,10 +1010,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     high_low: 'அதிகபட்சம் / குறைந்தபட்சம்',
     rain_prob: 'மழை வாய்ப்பு',
     today: 'இன்று',
-    gallery: 'நோய் தொகுப்பு',
-    community_images: 'சமூக படங்கள்',
-    upload_to_gallery: 'தொகுப்பில் பதிவேற்றவும்',
-    no_images: 'படங்கள் இல்லை',
     analyzing_crop: 'உங்கள் பயிர் பகுப்பாய்வு செய்யப்படுகிறது...',
     select_language: 'மொழியைத் தேர்ந்தெடுக்கவும்',
   },
@@ -1125,8 +1043,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     treatment_steps: 'સારવારના પગલાં',
     disease_library: 'રોગ પુસ્તકાલય',
     scan_crop: 'પાક સ્કેન કરો',
-    upload_image: 'અસરગ્રસ્ત છોડની છબી અપલોડ કરો',
-    analyzing: 'છબીનું વિશ્લેષણ થઈ રહ્યું છે...',
     analysis_result: 'AI વિશ્લેષણ પરિણામ',
     potential_diseases: 'સંભવિત રોગો',
     ai_advice: 'AI સલાહ',
@@ -1144,10 +1060,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     high_low: 'મહત્તમ / લઘુત્તમ',
     rain_prob: 'વરસાદની શક્યતા',
     today: 'આજે',
-    gallery: 'રોગ ગેલેરી',
-    community_images: 'સમુદાયની છબીઓ',
-    upload_to_gallery: 'ગેલેરીમાં અપલોડ કરો',
-    no_images: 'કોઈ છબીઓ ઉપલબ્ધ નથી',
     analyzing_crop: 'તમારા પાકનું વિશ્લેષણ થઈ રહ્યું છે...',
     select_language: 'ભાષા પસંદ કરો',
   },
@@ -1181,8 +1093,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     treatment_steps: 'ಚಿಕಿತ್ಸಾ ಹಂತಗಳು',
     disease_library: 'ರೋಗ ಗ್ರಂಥಾಲಯ',
     scan_crop: 'ಬೆಳೆಯನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ',
-    upload_image: 'ಬಾಧಿತ ಸಸ್ಯದ ಚಿತ್ರವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ',
-    analyzing: 'ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...',
     analysis_result: 'AI ವಿಶ್ಲೇಷಣೆಯ ಫಲಿತಾಂಶ',
     potential_diseases: 'ಸಂಭವನೀಯ ರೋಗಗಳು',
     ai_advice: 'AI ಸಲಹೆ',
@@ -1200,10 +1110,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     high_low: 'ಗರಿಷ್ಠ / ಕನಿಷ್ಠ',
     rain_prob: 'ಮಳೆಯ ಸಂಭವನೀಯತೆ',
     today: 'ಇಂದು',
-    gallery: 'ರೋಗ ಗ್ಯಾಲರಿ',
-    community_images: 'ಸಮುದಾಯ ಚಿತ್ರಗಳು',
-    upload_to_gallery: 'ಗ್ಯಾಲರಿಗೆ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ',
-    no_images: 'ಯಾವುದೇ ಚಿತ್ರಗಳಿಲ್ಲ',
     analyzing_crop: 'ನಿಮ್ಮ ಬೆಳೆಯನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...',
     select_language: 'ಭಾಷೆಯನ್ನು ಆರಿಸಿ',
   },

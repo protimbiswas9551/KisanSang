@@ -38,46 +38,6 @@ export async function getGeminiResponse(
   }
 }
 
-export async function analyzeCropImage(
-  base64Image: string,
-  mimeType: string,
-  language: Language
-) {
-  if (!API_KEY) return "Gemini API key is missing.";
-
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
-
-  const prompt = `
-    Analyze this image of a plant/crop. 
-    1. Identify the crop if possible.
-    2. Identify any potential diseases or pests visible.
-    3. Suggest immediate treatment steps and long-term prevention.
-    4. Provide the response in ${language === 'hi' ? 'Hindi' : 'English'}.
-    Keep it practical and farmer-friendly.
-  `;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{
-        parts: [
-          { text: prompt },
-          {
-            inlineData: {
-              mimeType: mimeType,
-              data: base64Image,
-            },
-          },
-        ],
-      }],
-    });
-    return response.text || "I couldn't analyze the image.";
-  } catch (error) {
-    console.error("Gemini Image Error:", error);
-    return "Sorry, I couldn't process the image right now.";
-  }
-}
-
 async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 3, backoff = 2000): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), 10000); // 10s timeout

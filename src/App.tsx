@@ -22,16 +22,11 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  X,
-  Camera,
-  Upload,
-  Loader2
+  X
 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import { AppState, Language, SoilData, WeatherData } from './types';
 import { CROPS, DISEASES, TRANSLATIONS } from './constants';
-import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse, analyzeCropImage } from './services';
-import { fetchStockImage } from './imageService';
+import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse } from './services';
 import { cn } from './utils';
 
 export default function App() {
@@ -112,31 +107,6 @@ export default function App() {
     };
     init();
   }, []);
-
-  useEffect(() => {
-    const fetchImages = async () => {
-      const cropImages: Record<string, string> = {};
-      const diseaseImages: Record<string, string[]> = {};
-
-      // Fetch crop images
-      for (const crop of CROPS) {
-        const img = await fetchStockImage(`${crop.name.en} plant crop`);
-        if (img) cropImages[crop.id] = img;
-      }
-
-      // Fetch disease images
-      for (const disease of DISEASES) {
-        const img = await fetchStockImage(`${disease.name.en} ${disease.crop} leaf disease`);
-        if (img) diseaseImages[disease.id] = [img];
-      }
-
-      setState(prev => ({ ...prev, cropImages, diseaseImages }));
-    };
-
-    if (!state.loading && !state.cropImages) {
-      fetchImages();
-    }
-  }, [state.loading, state.cropImages]);
 
   const t = TRANSLATIONS[state.language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
 
@@ -619,13 +589,8 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
                 onClick={() => setExpandedCropId(isExpanded ? null : crop.id)}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
-                    <img 
-                      src={state.cropImages?.[crop.id] || crop.image} 
-                      alt={crop.id} 
-                      className="w-full h-full object-cover" 
-                      referrerPolicy="no-referrer" 
-                    />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-gray-100 bg-green-50 text-[#2D6A4F]">
+                    <Sprout size={24} />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-800">{crop.name[state.language] || crop.name.en}</h4>
@@ -821,190 +786,16 @@ function WeatherStat({ icon, label, value }: { icon: React.ReactNode, label: str
 
 function DiseaseView({ state, t }: { state: AppState, t: any }) {
   const [search, setSearch] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
-  const [userImages, setUserImages] = useState<Record<string, string[]>>({});
-  const [selectedImage, setSelectedImage] = useState<{ url: string, diseaseId?: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
-  const [activeDiseaseId, setActiveDiseaseId] = useState<string | null>(null);
   
   const filteredDiseases = DISEASES.filter(d => 
     (d.name[state.language] || d.name.en).toLowerCase().includes(search.toLowerCase()) ||
     (d.crop).toLowerCase().includes(search.toLowerCase())
   );
 
-  // Get all images for the community showcase
-  const allImages = DISEASES.flatMap(d => {
-    const dynamicImages = state.diseaseImages?.[d.id] || [];
-    return [
-      ...(d.images || []).map(url => ({ url, diseaseId: d.id, name: d.name[state.language] || d.name.en })),
-      ...dynamicImages.map(url => ({ url, diseaseId: d.id, name: d.name[state.language] || d.name.en })),
-      ...(userImages[d.id] || []).map(url => ({ url, diseaseId: d.id, name: d.name[state.language] || d.name.en }))
-    ];
-  });
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsAnalyzing(true);
-    setAnalysisResult(null);
-
-    try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = (reader.result as string).split(',')[1];
-        const result = await analyzeCropImage(base64String, file.type, state.language);
-        setAnalysisResult(result);
-        setIsAnalyzing(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error("Analysis failed:", error);
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>, diseaseId: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setUserImages(prev => ({
-        ...prev,
-        [diseaseId]: [...(prev[diseaseId] || []), base64String]
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const analyzeSelectedImage = async () => {
-    if (!selectedImage) return;
-    
-    setIsAnalyzing(true);
-    setAnalysisResult(null);
-    const imageUrl = selectedImage.url;
-    setSelectedImage(null);
-
-    try {
-      // If it's a base64 string from user upload
-      let base64String = '';
-      let mimeType = 'image/jpeg';
-      
-      if (imageUrl.startsWith('data:')) {
-        const parts = imageUrl.split(',');
-        base64String = parts[1];
-        mimeType = parts[0].split(':')[1].split(';')[0];
-      } else {
-        // For sample images, we'd need to fetch and convert to base64
-        // For this demo, we'll just simulate or use a placeholder message
-        // In a real app, you'd fetch the image as a blob
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        mimeType = blob.type;
-        const reader = new FileReader();
-        base64String = await new Promise((resolve) => {
-          reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
-          reader.readAsDataURL(blob);
-        });
-      }
-
-      const result = await analyzeCropImage(base64String, mimeType, state.language);
-      setAnalysisResult(result);
-      setIsAnalyzing(false);
-    } catch (error) {
-      console.error("Analysis failed:", error);
-      setIsAnalyzing(false);
-    }
-  };
-
   return (
     <div className="space-y-6 pb-10">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-800">{t.disease_library}</h2>
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isAnalyzing}
-          className="flex items-center gap-2 bg-[#2D6A4F] text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg active:scale-95 transition-all disabled:opacity-50"
-        >
-          {isAnalyzing ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
-          {t.scan_crop}
-        </button>
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleImageUpload} 
-          accept="image/*" 
-          className="hidden" 
-        />
-      </div>
-
-      {/* AI Analysis Section */}
-      <AnimatePresence>
-        {(isAnalyzing || analysisResult) && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-2xl border-2 border-[#2D6A4F]/20 overflow-hidden shadow-sm"
-          >
-            <div className="bg-[#2D6A4F]/5 p-4 border-b border-[#2D6A4F]/10 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[#2D6A4F]">
-                <Sprout size={20} />
-                <h3 className="font-bold">{t.analysis_result}</h3>
-              </div>
-              <button onClick={() => setAnalysisResult(null)} className="text-gray-400 hover:text-gray-600">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="p-6">
-              {isAnalyzing ? (
-                <div className="flex flex-col items-center justify-center py-10 gap-4">
-                  <Loader2 size={40} className="text-[#2D6A4F] animate-spin" />
-                  <p className="text-sm text-gray-500 font-medium">{t.analyzing}</p>
-                </div>
-              ) : (
-                <div className="prose prose-sm max-w-none text-gray-700">
-                  <div className="markdown-body">
-                    <ReactMarkdown>{analysisResult || ''}</ReactMarkdown>
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Community Showcase */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-gray-800">{t.community_images}</h3>
-          <span className="text-[10px] text-gray-400 font-medium">{allImages.length} Images</span>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {allImages.map((img, idx) => (
-            <motion.div 
-              key={`community-${idx}`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setSelectedImage({ url: img.url, diseaseId: img.diseaseId })}
-              className="shrink-0 w-32 h-32 rounded-2xl overflow-hidden border border-gray-100 shadow-sm relative group cursor-pointer"
-            >
-              <img src={img.url} alt="Community" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                <span className="text-[8px] text-white font-bold truncate">{img.name}</span>
-              </div>
-            </motion.div>
-          ))}
-          {allImages.length === 0 && (
-            <div className="w-full h-32 bg-gray-50 rounded-2xl flex items-center justify-center border border-dashed border-gray-200">
-              <span className="text-xs text-gray-400">{t.no_images}</span>
-            </div>
-          )}
-        </div>
       </div>
 
       <div className="relative">
@@ -1022,9 +813,14 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
         {filteredDiseases.map(d => (
           <div key={d.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
             <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-bold text-lg text-gray-800">{d.name[state.language] || d.name.en}</h4>
-                <span className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider">{d.crop}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-red-600">
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg text-gray-800">{d.name[state.language] || d.name.en}</h4>
+                  <span className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider">{d.crop}</span>
+                </div>
               </div>
               <span className={cn("text-[10px] px-2 py-1 rounded-full font-bold uppercase", 
                 d.severity === 'High' ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"
@@ -1033,50 +829,6 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
               </span>
             </div>
             
-            {/* Image Gallery */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-gray-400 uppercase block">{t.gallery}</span>
-                <button 
-                  onClick={() => {
-                    setActiveDiseaseId(d.id);
-                    galleryInputRef.current?.click();
-                  }}
-                  className="text-[10px] font-bold text-[#2D6A4F] flex items-center gap-1 hover:underline"
-                >
-                  <Upload size={10} />
-                  {t.upload_to_gallery}
-                </button>
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {/* Dynamic/Sample Images */}
-                {[...(d.images || []), ...(state.diseaseImages?.[d.id] || [])].map((img, idx) => (
-                  <div 
-                    key={`sample-${idx}`} 
-                    onClick={() => setSelectedImage({ url: img, diseaseId: d.id })}
-                    className="shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-gray-100 cursor-pointer active:scale-95 transition-transform bg-gray-50"
-                  >
-                    <img src={img} alt={d.id} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                ))}
-                {/* User Uploaded Images */}
-                {userImages[d.id]?.map((img, idx) => (
-                  <div 
-                    key={`user-${idx}`} 
-                    onClick={() => setSelectedImage({ url: img, diseaseId: d.id })}
-                    className="shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-[#2D6A4F]/20 cursor-pointer active:scale-95 transition-transform"
-                  >
-                    <img src={img} alt="User upload" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                ))}
-                {(!d.images || d.images.length === 0) && (!userImages[d.id] || userImages[d.id].length === 0) && (
-                  <div className="w-full h-24 bg-gray-50 rounded-lg flex items-center justify-center border border-dashed border-gray-200">
-                    <span className="text-[10px] text-gray-400">{t.no_images}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <div className="space-y-2">
               <span className="text-[10px] font-bold text-gray-400 uppercase block">Symptoms</span>
               <p className="text-xs text-gray-600 leading-relaxed">{d.symptoms[state.language] || d.symptoms.en}</p>
@@ -1122,59 +874,6 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
           </div>
         )}
       </div>
-
-      {/* Image Detail Modal */}
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[80] bg-black/90 flex flex-col items-center justify-center p-6 backdrop-blur-md"
-          >
-            <button 
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-6 right-6 p-2 text-white/60 hover:text-white transition-colors"
-            >
-              <X size={32} />
-            </button>
-            
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="w-full max-w-lg space-y-6"
-            >
-              <div className="rounded-3xl overflow-hidden shadow-2xl border border-white/10">
-                <img src={selectedImage.url} alt="Selected" className="w-full aspect-square object-cover" referrerPolicy="no-referrer" />
-              </div>
-              
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={analyzeSelectedImage}
-                  className="w-full bg-[#2D6A4F] text-white py-4 rounded-2xl font-bold shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                  <Search size={20} />
-                  Analyze with AI
-                </button>
-                <button 
-                  onClick={() => setSelectedImage(null)}
-                  className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold hover:bg-white/20 transition-all"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <input 
-        type="file" 
-        ref={galleryInputRef} 
-        onChange={(e) => activeDiseaseId && handleGalleryUpload(e, activeDiseaseId)} 
-        accept="image/*" 
-        className="hidden" 
-      />
     </div>
   );
 }
