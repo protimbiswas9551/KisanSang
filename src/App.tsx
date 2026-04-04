@@ -22,7 +22,8 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  X
+  X,
+  Languages
 } from 'lucide-react';
 import { AppState, Language, SoilData, WeatherData } from './types';
 import { CROPS, DISEASES, TRANSLATIONS } from './constants';
@@ -160,15 +161,13 @@ export default function App() {
         </div>
         
         <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setState(s => ({ ...s, language: s.language === 'hi' ? 'en' : 'hi' }))}
-            className="text-xs font-medium bg-gray-100 px-2 py-1 rounded border border-gray-200"
-          >
-            {state.language === 'hi' ? 'English' : 'हिंदी'}
-          </button>
+          <LanguageSelector 
+            currentLanguage={state.language} 
+            onLanguageChange={(lang) => setState(s => ({ ...s, language: lang }))} 
+          />
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <MapPin size={14} className="text-[#2D6A4F]" />
-            <span className="max-w-[100px] truncate">{state.location?.name || 'Locating...'}</span>
+            <span className="max-w-[80px] truncate sm:max-w-[120px]">{state.location?.name || 'Locating...'}</span>
           </div>
         </div>
       </header>
@@ -204,8 +203,8 @@ export default function App() {
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 flex justify-around items-center z-50 shadow-lg">
-        <NavButton icon={<Home size={20} />} label={state.language === 'hi' ? 'होम' : 'Home'} active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
-        <NavButton icon={<Droplets size={20} />} label={state.language === 'hi' ? 'मिट्टी' : 'Soil'} active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} />
+        <NavButton icon={<Home size={20} />} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+        <NavButton icon={<Droplets size={20} />} label={t.soil} active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} />
         <div className="relative -top-6">
           <button 
             onClick={() => setIsBotOpen(true)}
@@ -214,9 +213,9 @@ export default function App() {
             <Mic size={28} />
           </button>
         </div>
-        <NavButton icon={<Sprout size={20} />} label={state.language === 'hi' ? 'फसल' : 'Crops'} active={activeTab === 'crops'} onClick={() => setActiveTab('crops')} />
-        <NavButton icon={<Database size={20} />} label={state.language === 'hi' ? 'रोग' : 'Disease'} active={activeTab === 'disease'} onClick={() => setActiveTab('disease')} />
-        <NavButton icon={<CloudSun size={20} />} label={state.language === 'hi' ? 'मौसम' : 'Weather'} active={activeTab === 'weather'} onClick={() => setActiveTab('weather')} />
+        <NavButton icon={<Sprout size={20} />} label={t.crops} active={activeTab === 'crops'} onClick={() => setActiveTab('crops')} />
+        <NavButton icon={<Database size={20} />} label={t.disease} active={activeTab === 'disease'} onClick={() => setActiveTab('disease')} />
+        <NavButton icon={<CloudSun size={20} />} label={t.weather} active={activeTab === 'weather'} onClick={() => setActiveTab('weather')} />
       </nav>
 
       {/* Voice Bot Modal */}
@@ -980,7 +979,20 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = state.language === 'hi' ? 'hi-IN' : 'en-IN';
+    const getLangCode = (lang: Language) => {
+      const codes: Record<Language, string> = {
+        en: 'en-IN',
+        hi: 'hi-IN',
+        bn: 'bn-IN',
+        ta: 'ta-IN',
+        te: 'te-IN',
+        mr: 'mr-IN',
+        gu: 'gu-IN',
+        kn: 'kn-IN'
+      };
+      return codes[lang] || 'en-IN';
+    };
+    recognition.lang = getLangCode(state.language);
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
     recognition.onresult = async (event: any) => {
@@ -1005,7 +1017,20 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
     
     // Speak response
     const utterance = new SpeechSynthesisUtterance(response);
-    utterance.lang = state.language === 'hi' ? 'hi-IN' : 'en-IN';
+    const getLangCode = (lang: Language) => {
+      const codes: Record<Language, string> = {
+        en: 'en-IN',
+        hi: 'hi-IN',
+        bn: 'bn-IN',
+        ta: 'ta-IN',
+        te: 'te-IN',
+        mr: 'mr-IN',
+        gu: 'gu-IN',
+        kn: 'kn-IN'
+      };
+      return codes[lang] || 'en-IN';
+    };
+    utterance.lang = getLangCode(state.language);
     window.speechSynthesis.speak(utterance);
   };
 
@@ -1085,5 +1110,69 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
         </p>
       </div>
     </motion.div>
+  );
+}
+
+function LanguageSelector({ currentLanguage, onLanguageChange }: { currentLanguage: Language, onLanguageChange: (lang: Language) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors active:scale-95"
+      >
+        <Languages size={16} className="text-[#2D6A4F]" />
+        <span className="text-xs font-bold uppercase tracking-tight">
+          {currentLanguage}
+        </span>
+        <ChevronDown size={14} className={cn("transition-transform duration-200", isOpen && "rotate-180")} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[60] grid grid-cols-1 gap-0.5 max-h-[320px] overflow-y-auto"
+          >
+            {(Object.keys(TRANSLATIONS) as Language[]).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => {
+                  onLanguageChange(lang);
+                  setIsOpen(false);
+                }}
+                className={cn(
+                  "flex items-center justify-between px-4 py-2.5 text-sm transition-colors",
+                  currentLanguage === lang 
+                    ? "bg-green-50 text-[#2D6A4F] font-bold" 
+                    : "text-gray-600 hover:bg-gray-50"
+                )}
+              >
+                <div className="flex flex-col items-start">
+                  <span className="text-xs font-bold">{TRANSLATIONS[lang].language_name}</span>
+                  <span className="text-[10px] opacity-50 uppercase tracking-tighter">{lang}</span>
+                </div>
+                {currentLanguage === lang && <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A4F]" />}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

@@ -12,9 +12,21 @@ export async function getGeminiResponse(
 
   const ai = new GoogleGenAI({ apiKey: API_KEY });
 
+  const languageNames: Record<Language, string> = {
+    en: 'English',
+    hi: 'Hindi',
+    bn: 'Bengali',
+    mr: 'Marathi',
+    te: 'Telugu',
+    ta: 'Tamil',
+    gu: 'Gujarati',
+    kn: 'Kannada'
+  };
+  const languageName = languageNames[language] || 'English';
+
   const systemInstruction = `
     You are KisanMitra, an expert Indian agricultural assistant.
-    Always reply in: ${language === 'hi' ? 'Hindi' : 'English'} (or the requested local language).
+    Always reply in ${languageName}.
     Keep answers short, practical, and jargon-free — farmer-friendly.
     Current context:
     - Location: ${context.location}
