@@ -233,7 +233,7 @@ export const CROPS: Crop[] = [
     minPh: 6.0, maxPh: 7.5, minTemp: 15, maxTemp: 25, waterRequirement: 'Low', sowingMonths: [10, 11],
     description: { en: 'Major pulse crop, rich in protein.', hi: 'प्रमुख दलहन फसल, प्रोटीन से भरपूर।', bn: 'প্রধান ডাল জাতীয় ফসল।', mr: 'प्रमुख कडधान्य पीक।', te: 'ప్రధాన పప్పుధాన్య పంట।', ta: 'முக்கிய பருப்பு வகை பயிர்।', gu: 'મુખ્ય કઠોળ પાક।', kn: 'ಪ್ರಮುಖ ಬೇಳೆಕಾಳು ಬೆಳೆ.' },
     soilType: { en: 'Well-drained Loam', hi: 'अच्छी जल निकासी वाली दोमट', bn: 'দোআঁশ মাটি।', mr: 'लोम माती।', te: 'లోమ్ మట్టి।', ta: 'வண்டல் மண்।', gu: 'ગોરાડુ માટી।', kn: 'ಲೋಮ್ ಮಣ್ಣು.' },
-    rotationGroup: 'pulse'
+    rotationGroup: 'legume'
   },
   {
     id: 'tur',
@@ -241,7 +241,7 @@ export const CROPS: Crop[] = [
     minPh: 6.5, maxPh: 7.5, minTemp: 20, maxTemp: 30, waterRequirement: 'Low', sowingMonths: [6, 7],
     description: { en: 'Important pulse crop in India.', hi: 'भारत में महत्वपूर्ण दलहन फसल।', bn: 'গুরুত্বপূর্ণ ডাল ফসল।', mr: 'महत्वाचे कडधान्य पीक।', te: 'ముఖ్యమైన పప్పుధాన్య పంట।', ta: 'முக்கிய பருப்பு வகை பயிர்।', gu: 'મહત્વનો કઠોળ પાક।', kn: 'ಪ್ರಮುಖ ಬೇಳೆಕಾಳು ಬೆಳೆ.' },
     soilType: { en: 'Well-drained Alluvial or Black Soil', hi: 'अच्छी जल निकासी वाली जलोढ़ या काली मिट्टी', bn: 'দোআঁশ মাটি।', mr: 'काळी माती।', te: 'నల్ల రేगడి మట్టి।', ta: 'கரிசல் மண்।', gu: 'કાળી માટી।', kn: 'ಕಪ್ಪು ಮಣ್ಣು.' },
-    rotationGroup: 'pulse'
+    rotationGroup: 'legume'
   },
   {
     id: 'soyabean',
@@ -249,7 +249,7 @@ export const CROPS: Crop[] = [
     minPh: 6.0, maxPh: 7.5, minTemp: 20, maxTemp: 32, waterRequirement: 'Medium', sowingMonths: [6, 7],
     description: { en: 'Major oilseed and protein source.', hi: 'प्रमुख तिलहन और प्रोटीन स्रोत।', bn: 'প্রধান তৈলবীজ ফসল।', mr: 'प्रमुख तेलबिया पीक।', te: 'ప్రధాన నూనెగింజల పంట।', ta: 'முக்கிய எண்ணெய் வித்து பயிர்।', gu: 'મુખ્ય તેલીબિયાં પાક।', kn: 'ಪ್ರಮುಖ ಎಣ್ಣೆಕಾಳು ಬೆಳೆ.' },
     soilType: { en: 'Well-drained Loam', hi: 'अच्छी जल निकासी वाली दोमट', bn: 'দোআঁশ মাটি।', mr: 'लोम माती।', te: 'లోమ్ మట్టి।', ta: 'வண்டல் மண்।', gu: 'ગોરાડુ માટી।', kn: 'ಲೋಮ್ ಮಣ್ಣು.' },
-    rotationGroup: 'oilseed'
+    rotationGroup: 'legume'
   },
   {
     id: 'groundnut',
@@ -257,7 +257,7 @@ export const CROPS: Crop[] = [
     minPh: 6.0, maxPh: 6.5, minTemp: 20, maxTemp: 30, waterRequirement: 'Medium', sowingMonths: [6, 7, 1, 2],
     description: { en: 'Important oilseed and snack crop.', hi: 'महत्वपूर्ण तिलहन और स्नैक फसल।', bn: 'গুরুত্বপূর্ণ তৈলবীজ ফসল।', mr: 'महत्वाचे तेलबिया पीक।', te: 'ముఖ్యమైన నూనెగింజల పంట।', ta: 'முக்கிய எண்ணெய் வித்து பயிர்।', gu: 'મહત્વનો તેલીબિયાં પાક।', kn: 'ಪ್ರಮುಖ ಎಣ್ಣೆಕಾಳು ಬೆಳೆ.' },
     soilType: { en: 'Sandy Loam', hi: 'रेतीली दोमट', bn: 'বেলে দোআঁশ মাটি।', mr: 'रेताड लोम माती।', te: 'ఇసుక లోమ్ మట్టి।', ta: 'மணல் கலந்த வண்டல் மண்।', gu: 'રેતાળ ગોરાડુ માટી।', kn: 'ಮರಳು ಮಿಶ್ರಿತ ಲೋಮ್ ಮಣ್ಣು.' },
-    rotationGroup: 'oilseed'
+    rotationGroup: 'legume'
   },
   {
     id: 'onion',
@@ -521,6 +521,14 @@ export const TRANSLATIONS: Record<Language, any> = {
     rotation_importance_title: 'Why Rotate Crops?',
     rotation_importance_desc: 'Rotating crops prevents soil exhaustion, breaks pest cycles, and naturally improves soil health by balancing nutrient demand.',
     learn_more: 'View Detailed Guide',
+    no_previous_data: 'Select your previous crop to get personalized rotation advice.',
+    cereal_benefit: 'Cereals like wheat and rice provide high yields and stable income.',
+    legume_benefit: 'Legumes fix nitrogen in the soil, reducing the need for chemical fertilizers.',
+    rotation_reason: 'Based on your previous crop, this rotation will maximize soil health.',
+    rotation_advice_title: 'Crop Rotation Advisor',
+    crop_rotation: 'Crop Rotation Advisor',
+    select_previous_crop: 'Select Previous Crop',
+    suggested_next: 'Suggested Next Crop',
   },
   hi: {
     language_name: 'हिंदी',
@@ -567,6 +575,14 @@ export const TRANSLATIONS: Record<Language, any> = {
     rotation_importance_title: 'फसल चक्र क्यों महत्वपूर्ण है?',
     rotation_importance_desc: 'फसल चक्र मिट्टी की उर्वरता बनाए रखने, कीटों और रोगों को कम करने और विभिन्न प्रकार की फसलों को बदलकर मिट्टी की संरचना में सुधार करने में मदद करता है।',
     learn_more: 'विस्तृत गाइड देखें',
+    no_previous_data: 'व्यक्तिगत फसल चक्र सलाह प्राप्त करने के लिए अपनी पिछली फसल चुनें।',
+    cereal_benefit: 'गेहूं और चावल जैसे अनाज उच्च उपज और स्थिर आय प्रदान करते हैं।',
+    legume_benefit: 'दलहन मिट्टी में नाइट्रोजन को स्थिर करते हैं, जिससे रासायनिक उर्वरकों की आवश्यकता कम हो जाती है।',
+    rotation_reason: 'आपकी पिछली फसल के आधार पर, यह चक्र मिट्टी के स्वास्थ्य को अधिकतम करेगा।',
+    rotation_advice_title: 'फसल चक्र सलाहकार',
+    crop_rotation: 'फसल चक्र सलाहकार',
+    select_previous_crop: 'पिछली फसल चुनें',
+    suggested_next: 'सुझाई गई अगली फसल',
   },
   bn: {
     language_name: 'বাংলা',
@@ -613,6 +629,14 @@ export const TRANSLATIONS: Record<Language, any> = {
     rotation_importance_title: 'ফসল আবর্তন কেন গুরুত্বপূর্ণ?',
     rotation_importance_desc: 'ফসল আবর্তন মাটির উর্বরতা বজায় রাখতে সাহায্য করে, কীটপতঙ্গ ও রোগ কমায় এবং মাটির গঠন উন্নত করে।',
     learn_more: 'বিস্তারিত নির্দেশিকা দেখুন',
+    no_previous_data: 'ব্যক্তিগতকৃত আবর্তন পরামর্শ পেতে আপনার আগের ফসল নির্বাচন করুন।',
+    cereal_benefit: 'গম এবং ধানের মতো শস্য উচ্চ ফলন এবং স্থিতিশীল আয় প্রদান করে।',
+    legume_benefit: 'শিম্বগোত্রীয় ফসল মাটিতে নাইট্রোজেন স্থির করে, রাসায়নিক সারের প্রয়োজনীয়তা কমায়।',
+    rotation_reason: 'আপনার আগের ফসলের উপর ভিত্তি করে, এই আবর্তন মাটির স্বাস্থ্যকে সর্বোচ্চ করবে।',
+    rotation_advice_title: 'ফসল আবর্তন উপদেষ্টা',
+    crop_rotation: 'ফসল আবর্তন উপদেষ্টা',
+    select_previous_crop: 'আগের ফসল নির্বাচন করুন',
+    suggested_next: 'প্রস্তাবিত পরবর্তী ফসল',
   },
   mr: {
     language_name: 'मराठी',
@@ -659,6 +683,14 @@ export const TRANSLATIONS: Record<Language, any> = {
     rotation_importance_title: 'पीक फेरपालट का महत्त्वाची आहे?',
     rotation_importance_desc: 'पीक फेरपालट केल्याने जमिनीचा कस टिकून राहतो, कीड आणि रोगांचे प्रमाण कमी होते आणि जमिनीचे आरोग्य सुधारते.',
     learn_more: 'सविस्तर मार्गदर्शक पहा',
+    no_previous_data: 'वैयक्तिकृत पीक फेरपालट सल्ला मिळविण्यासाठी तुमचे मागील पीक निवडा।',
+    cereal_benefit: 'गहू आणि तांदूळ यांसारखी तृणधान्ये उच्च उत्पन्न आणि स्थिर उत्पन्न देतात।',
+    legume_benefit: 'कडधान्ये जमिनीत नायट्रोजन स्थिर करतात, ज्यामुळे रासायनिक खतांची गरज कमी होते।',
+    rotation_reason: 'तुमच्या मागील पिकावर आधारित, ही फेरपालट जमिनीचे आरोग्य वाढवेल।',
+    rotation_advice_title: 'पीक फेरपालट सल्लागार',
+    crop_rotation: 'पीक फेरपालट सल्लागार',
+    select_previous_crop: 'मागील पीक निवडा',
+    suggested_next: 'सुचवलेले पुढील पीक',
   },
   te: {
     language_name: 'తెలుగు',
@@ -706,6 +738,14 @@ export const TRANSLATIONS: Record<Language, any> = {
     rotation_importance_title: 'పంట మార్పిడి ఎందుకు ముఖ్యం?',
     rotation_importance_desc: 'పంట మార్పిడి మట్టి సారాన్ని కాపాడుతుంది, చీడపీడల ప్రభావాన్ని తగ్గిస్తుంది మరియు నేల ఆరోగ్యాన్ని మెరుగుపరుస్తుంది.',
     learn_more: 'వివరమైన గైడ్‌ను చూడండి',
+    no_previous_data: 'వ్యక్తిగతీకరించిన పంట మార్పిడి సలహా పొందడానికి మీ మునుపటి పంటను ఎంచుకోండి.',
+    cereal_benefit: 'గోధుమలు మరియు వరి వంటి తృణధాన్యాలు అధిక దిగుబడిని మరియు స్థిరమైన ఆదాయాన్ని అందిస్తాయి.',
+    legume_benefit: 'పప్పుధాన్యాలు నేలలో నత్రజనిని స్థిరీకరిస్తాయి, రసాయన ఎరువుల అవసరాన్ని తగ్గిస్తాయి.',
+    rotation_reason: 'మీ మునుపటి పంట ఆధారంగా, ఈ మార్పిడి నేల ఆరోగ్యాన్ని పెంచుతుంది.',
+    rotation_advice_title: 'పంట మార్పిడి సలహాదారు',
+    crop_rotation: 'పంట మార్పిడి సలహాదారు',
+    select_previous_crop: 'మునుపటి పంటను ఎంచుకోండి',
+    suggested_next: 'సూచించిన తదుపరి పంట',
   },
   ta: {
     language_name: 'தமிழ்',
@@ -752,6 +792,14 @@ export const TRANSLATIONS: Record<Language, any> = {
     rotation_importance_title: 'பயிர் சுழற்சி ஏன் முக்கியம்?',
     rotation_importance_desc: 'பயிர் சுழற்சி மண்ணின் வளத்தைப் பாதுகாக்கவும், பூச்சிகள் மற்றும் நோய்களைக் குறைக்கவும், மண்ணின் ஆரோக்கியத்தை மேம்படுத்தவும் உதவுகிறது.',
     learn_more: 'விரிவான வழிகாட்டியைப் பார்க்கவும்',
+    no_previous_data: 'தனிப்பயனாக்கப்பட்ட சுழற்சி ஆலோசனையைப் பெற உங்கள் முந்தைய பயிரைத் தேர்ந்தெடுக்கவும்.',
+    cereal_benefit: 'கோதுமை மற்றும் அரிசி போன்ற தானியங்கள் அதிக மகசூல் மற்றும் நிலையான வருமானத்தை வழங்குகின்றன.',
+    legume_benefit: 'பருப்பு வகைகள் மண்ணில் நைட்ரஜனை நிலைநிறுத்துகின்றன, இரசாயன உரங்களின் தேவையைக் குறைக்கின்றன.',
+    rotation_reason: 'உங்கள் முந்தைய பயிரின் அடிப்படையில், இந்த சுழற்சி மண்ணின் ஆரோக்கியத்தை மேம்படுத்தும்.',
+    rotation_advice_title: 'பயிர் சுழற்சி ஆலோசகர்',
+    crop_rotation: 'பயிர் சுழற்சி ஆலோசகர்',
+    select_previous_crop: 'முந்தைய பயிரைத் தேர்ந்தெடுக்கவும்',
+    suggested_next: 'பரிந்துரைக்கப்பட்ட அடுத்த பயிர்',
   },
   gu: {
     language_name: 'ગુજરાતી',
@@ -798,6 +846,14 @@ export const TRANSLATIONS: Record<Language, any> = {
     rotation_importance_title: 'પાક ફેરબદલી કેમ મહત્વની છે?',
     rotation_importance_desc: 'પાક ફેરબદલી જમીનની ફળદ્રુપતા જાળવી રાખવામાં, જીવાત અને રોગો ઘટાડવામાં અને જમીનનું સ્વાસ્થ્ય સુધારવામાં મદદ કરે છે.',
     learn_more: 'વિગતવાર માર્ગદર્શિકા જુઓ',
+    no_previous_data: 'વ્યક્તિગત પાક ફેરબદલી સલાહ મેળવવા માટે તમારો પાછલો પાક પસંદ કરો.',
+    cereal_benefit: 'ઘઉં અને ચોખા જેવા અનાજ ઉચ્ચ ઉપજ અને સ્થિર આવક આપે છે.',
+    legume_benefit: 'કઠોળ જમીનમાં નાઇટ્રોજન સ્થિર કરે છે, રાસાયણિક ખાતરોની જરૂરિયાત ઘટાડે છે.',
+    rotation_reason: 'તમારા પાછલા પાકના આધારે, આ ફેરબદલી જમીનના સ્વાસ્થ્યને મહત્તમ કરશે.',
+    rotation_advice_title: 'પાક ફેરબદલી સલાહકાર',
+    crop_rotation: 'પાક ફેરબદલી સલાહકાર',
+    select_previous_crop: 'પાછલો પાક પસંદ કરો',
+    suggested_next: 'સૂચિત આગામી પાક',
   },
   kn: {
     language_name: 'ಕನ್ನಡ',
@@ -844,5 +900,13 @@ export const TRANSLATIONS: Record<Language, any> = {
     rotation_importance_title: 'ಬೆಳೆ ಸರದಿ ಏಕೆ ಮುಖ್ಯ?',
     rotation_importance_desc: 'ಬೆಳೆ ಸರದಿಯು ಮಣ್ಣಿನ ಫಲವತ್ತತೆಯನ್ನು ಕಾಪಾಡಲು, ಕೀಟಗಳು ಮತ್ತು ರೋಗಗಳನ್ನು ಕಡಿಮೆ ಮಾಡಲು ಮತ್ತು ಮಣ್ಣಿನ ಆರೋಗ್ಯವನ್ನು ಸುಧಾರಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ.',
     learn_more: 'ವಿವರವಾದ ಮಾರ್ಗದರ್ಶಿ ನೋಡಿ',
+    no_previous_data: 'ವೈಯಕ್ತಿಕಗೊಳಿಸಿದ ಬೆಳೆ ಸರದಿ ಸಲಹೆ ಪಡೆಯಲು ನಿಮ್ಮ ಹಿಂದಿನ ಬೆಳೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ.',
+    cereal_benefit: 'ಗೋಧಿ ಮತ್ತು ಭತ್ತದಂತಹ ಧಾನ್ಯಗಳು ಹೆಚ್ಚಿನ ಇಳುವರಿ ಮತ್ತು ಸ್ಥಿರ ಆದಾಯವನ್ನು ನೀಡುತ್ತವೆ.',
+    legume_benefit: 'ದ್ವಿದಳ ಧಾನ್ಯಗಳು ಮಣ್ಣಿನಲ್ಲಿ ಸಾರಜನಕವನ್ನು ಸ್ಥಿರಗೊಳಿಸುತ್ತವೆ, ರಾಸಾಯನಿಕ ಗೊಬ್ಬರಗಳ ಅಗತ್ಯವನ್ನು ಕಡಿಮೆ ಮಾಡುತ್ತದೆ.',
+    rotation_reason: 'ನಿಮ್ಮ ಹಿಂದಿನ ಬೆಳೆಯ ಆಧಾರದ ಮೇಲೆ, ಈ ಸರದಿಯು ಮಣ್ಣಿನ ಆರೋಗ್ಯವನ್ನು ಹೆಚ್ಚಿಸುತ್ತದೆ.',
+    rotation_advice_title: 'ಬೆಳೆ ಸರದಿ ಸಲಹೆಗಾರ',
+    crop_rotation: 'ಬೆಳೆ ಸರದಿ ಸಲಹೆಗಾರ',
+    select_previous_crop: 'ಹಿಂದಿನ ಬೆಳೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ',
+    suggested_next: 'ಸೂಚಿಸಲಾದ ಮುಂದಿನ ಬೆಳೆ',
   },
 };
