@@ -23,7 +23,9 @@ import {
   ChevronDown,
   ChevronUp,
   X,
-  Languages
+  Languages,
+  Info,
+  ExternalLink,
 } from 'lucide-react';
 import { AppState, Language, SoilData, WeatherData } from './types';
 import { CROPS, DISEASES, TRANSLATIONS } from './constants';
@@ -555,6 +557,24 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
         <div className="flex items-center gap-2 text-[#2D6A4F]">
           <Database size={20} />
           <h3 className="font-bold text-lg">{t.crop_rotation}</h3>
+        </div>
+
+        <div className="bg-white/50 rounded-xl p-4 border border-[#2D6A4F]/10 space-y-2">
+          <h4 className="text-sm font-bold text-[#2D6A4F] flex items-center gap-2">
+            <Info size={16} />
+            {t.rotation_importance_title}
+          </h4>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            {t.rotation_importance_desc}
+          </p>
+          <a 
+            href="https://en.wikipedia.org/wiki/Crop_rotation" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[10px] font-bold text-[#2D6A4F] hover:underline"
+          >
+            {t.learn_more} <ExternalLink size={10} />
+          </a>
         </div>
 
         <div className="space-y-4">

@@ -518,6 +518,9 @@ export const TRANSLATIONS: Record<Language, any> = {
     heavy_rain_desc: 'High probability of rain (>70%). Plan field activities accordingly.',
     sowing_window_title: 'Ideal Sowing Window',
     sowing_window_desc: 'Current conditions are perfect for Mustard sowing.',
+    rotation_importance_title: 'Why Rotate Crops?',
+    rotation_importance_desc: 'Rotating crops prevents soil exhaustion, breaks pest cycles, and naturally improves soil health by balancing nutrient demand.',
+    learn_more: 'View Detailed Guide',
   },
   hi: {
     language_name: 'हिंदी',
@@ -561,6 +564,9 @@ export const TRANSLATIONS: Record<Language, any> = {
     heavy_rain_desc: 'बारिश की उच्च संभावना (>70%)। तदनुसार कृषि गतिविधियों की योजना बनाएं।',
     sowing_window_title: 'बुवाई के लिए आदर्श समय',
     sowing_window_desc: 'वर्तमान परिस्थितियां सरसों की बुवाई के लिए उपयुक्त हैं।',
+    rotation_importance_title: 'फसल चक्र क्यों महत्वपूर्ण है?',
+    rotation_importance_desc: 'फसल चक्र मिट्टी की उर्वरता बनाए रखने, कीटों और रोगों को कम करने और विभिन्न प्रकार की फसलों को बदलकर मिट्टी की संरचना में सुधार करने में मदद करता है।',
+    learn_more: 'विस्तृत गाइड देखें',
   },
   bn: {
     language_name: 'বাংলা',
@@ -604,6 +610,9 @@ export const TRANSLATIONS: Record<Language, any> = {
     heavy_rain_desc: 'বৃষ্টির উচ্চ সম্ভাবনা (>৭০%)। সেই অনুযায়ী কৃষি কার্যক্রম পরিকল্পনা করুন।',
     sowing_window_title: 'বপনের আদর্শ সময়',
     sowing_window_desc: 'বর্তমান পরিস্থিতি সরিষা বপনের জন্য উপযুক্ত।',
+    rotation_importance_title: 'ফসল আবর্তন কেন গুরুত্বপূর্ণ?',
+    rotation_importance_desc: 'ফসল আবর্তন মাটির উর্বরতা বজায় রাখতে সাহায্য করে, কীটপতঙ্গ ও রোগ কমায় এবং মাটির গঠন উন্নত করে।',
+    learn_more: 'বিস্তারিত নির্দেশিকা দেখুন',
   },
   mr: {
     language_name: 'मराठी',
@@ -647,6 +656,9 @@ export const TRANSLATIONS: Record<Language, any> = {
     heavy_rain_desc: 'पावसाची दाट शक्यता (>७०%). त्यानुसार शेतीकामाचे नियोजन करा.',
     sowing_window_title: 'पेरणीसाठी आदर्श वेळ',
     sowing_window_desc: 'सध्याची परिस्थिती मोहरीच्या पेरणीसाठी योग्य आहे.',
+    rotation_importance_title: 'पीक फेरपालट का महत्त्वाची आहे?',
+    rotation_importance_desc: 'पीक फेरपालट केल्याने जमिनीचा कस टिकून राहतो, कीड आणि रोगांचे प्रमाण कमी होते आणि जमिनीचे आरोग्य सुधारते.',
+    learn_more: 'सविस्तर मार्गदर्शक पहा',
   },
   te: {
     language_name: 'తెలుగు',
@@ -691,6 +703,9 @@ export const TRANSLATIONS: Record<Language, any> = {
     heavy_rain_desc: 'వర్షం పడే అవకాశం ఎక్కువగా ఉంది (>70%). తదనుగుణంగా వ్యవసాయ పనులను ప్లాన్ చేయండి.',
     sowing_window_title: 'విత్తడానికి అనుకూల సమయం',
     sowing_window_desc: 'ప్రస్తుత పరిస్థితులు ఆవాలు విత్తడానికి అనుకూలంగా ఉన్నాయి.',
+    rotation_importance_title: 'పంట మార్పిడి ఎందుకు ముఖ్యం?',
+    rotation_importance_desc: 'పంట మార్పిడి మట్టి సారాన్ని కాపాడుతుంది, చీడపీడల ప్రభావాన్ని తగ్గిస్తుంది మరియు నేల ఆరోగ్యాన్ని మెరుగుపరుస్తుంది.',
+    learn_more: 'వివరమైన గైడ్‌ను చూడండి',
   },
   ta: {
     language_name: 'தமிழ்',
@@ -734,6 +749,9 @@ export const TRANSLATIONS: Record<Language, any> = {
     heavy_rain_desc: 'மழை பெய்ய அதிக வாய்ப்பு (>70%). அதற்கேற்ப விவசாயப் பணிகளைத் திட்டமிடுங்கள்.',
     sowing_window_title: 'விதைப்பதற்கு ஏற்ற காலம்',
     sowing_window_desc: 'தற்போதைய நிலை கடுகு விதைப்பதற்கு ஏற்றதாக உள்ளது.',
+    rotation_importance_title: 'பயிர் சுழற்சி ஏன் முக்கியம்?',
+    rotation_importance_desc: 'பயிர் சுழற்சி மண்ணின் வளத்தைப் பாதுகாக்கவும், பூச்சிகள் மற்றும் நோய்களைக் குறைக்கவும், மண்ணின் ஆரோக்கியத்தை மேம்படுத்தவும் உதவுகிறது.',
+    learn_more: 'விரிவான வழிகாட்டியைப் பார்க்கவும்',
   },
   gu: {
     language_name: 'ગુજરાતી',
@@ -777,6 +795,9 @@ export const TRANSLATIONS: Record<Language, any> = {
     heavy_rain_desc: 'વરસાદની ઉચ્ચ સંભાવના (>70%). તે મુજબ ખેતીની પ્રવૃત્તિઓનું આયોજન કરો.',
     sowing_window_title: 'વાવણી માટે આદર્શ સમય',
     sowing_window_desc: 'વર્તમાન પરિસ્થિતિ રાયડાની વાવણી માટે યોગ્ય છે.',
+    rotation_importance_title: 'પાક ફેરબદલી કેમ મહત્વની છે?',
+    rotation_importance_desc: 'પાક ફેરબદલી જમીનની ફળદ્રુપતા જાળવી રાખવામાં, જીવાત અને રોગો ઘટાડવામાં અને જમીનનું સ્વાસ્થ્ય સુધારવામાં મદદ કરે છે.',
+    learn_more: 'વિગતવાર માર્ગદર્શિકા જુઓ',
   },
   kn: {
     language_name: 'ಕನ್ನಡ',
@@ -820,5 +841,8 @@ export const TRANSLATIONS: Record<Language, any> = {
     heavy_rain_desc: 'ಮಳೆಯ ಹೆಚ್ಚಿನ ಸಂಭವನೀಯತೆ (>70%). ಅದರಂತೆ ಕೃಷಿ ಚಟುವಟಿಕೆಗಳನ್ನು ಯೋಜಿಸಿ.',
     sowing_window_title: 'ಬಿತ್ತನೆಗೆ ಸೂಕ್ತ ಸಮಯ',
     sowing_window_desc: 'ಪ್ರಸ್ತುತ ಪರಿಸ್ಥಿತಿಗಳು ಸಾಸಿವೆ ಬಿತ್ತನೆಗೆ ಸೂಕ್ತವಾಗಿವೆ.',
+    rotation_importance_title: 'ಬೆಳೆ ಸರದಿ ಏಕೆ ಮುಖ್ಯ?',
+    rotation_importance_desc: 'ಬೆಳೆ ಸರದಿಯು ಮಣ್ಣಿನ ಫಲವತ್ತತೆಯನ್ನು ಕಾಪಾಡಲು, ಕೀಟಗಳು ಮತ್ತು ರೋಗಗಳನ್ನು ಕಡಿಮೆ ಮಾಡಲು ಮತ್ತು ಮಣ್ಣಿನ ಆರೋಗ್ಯವನ್ನು ಸುಧಾರಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ.',
+    learn_more: 'ವಿವರವಾದ ಮಾರ್ಗದರ್ಶಿ ನೋಡಿ',
   },
 };
