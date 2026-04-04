@@ -419,6 +419,15 @@ function SoilView({ state, t, onRefresh, onManualInput }: { state: AppState, t: 
         </div>
 
         <div className="pt-6 border-t border-gray-100">
+          <SoilTextureTriangle 
+            sand={state.soil.sand} 
+            silt={state.soil.silt} 
+            clay={state.soil.clay} 
+            t={t} 
+          />
+        </div>
+
+        <div className="pt-6 border-t border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-gray-500">{t.ph_level}</span>
             <span className={cn("px-3 py-1 rounded-full text-xs font-bold", 
@@ -881,6 +890,9 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
   const [ph, setPh] = useState('7.0');
   const [nitrogen, setNitrogen] = useState('100');
   const [soc, setSoc] = useState('1.5');
+  const [sand, setSand] = useState('40');
+  const [silt, setSilt] = useState('40');
+  const [clay, setClay] = useState('20');
 
   return (
     <motion.div 
@@ -899,26 +911,29 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
           <button onClick={onClose} className="p-1 text-gray-400"><X size={20} /></button>
         </div>
         
-        <div className="p-6 space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase">{t.ph_level}</label>
-            <input 
-              type="number" 
-              step="0.1"
-              value={ph}
-              onChange={(e) => setPh(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
-            />
+        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500 uppercase">{t.ph_level}</label>
+              <input 
+                type="number" 
+                step="0.1"
+                value={ph}
+                onChange={(e) => setPh(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500 uppercase">{t.nitrogen} (mg/kg)</label>
+              <input 
+                type="number" 
+                value={nitrogen}
+                onChange={(e) => setNitrogen(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase">{t.nitrogen} (mg/kg)</label>
-            <input 
-              type="number" 
-              value={nitrogen}
-              onChange={(e) => setNitrogen(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
-            />
-          </div>
+
           <div className="space-y-1">
             <label className="text-xs font-bold text-gray-500 uppercase">{t.soc} (g/kg)</label>
             <input 
@@ -928,6 +943,39 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
               onChange={(e) => setSoc(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
             />
+          </div>
+
+          <div className="pt-2 border-t border-gray-100">
+            <label className="text-[10px] font-bold text-gray-400 uppercase mb-3 block">{t.soil_texture} (%)</label>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500">{t.sand}</label>
+                <input 
+                  type="number" 
+                  value={sand}
+                  onChange={(e) => setSand(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500">{t.silt}</label>
+                <input 
+                  type="number" 
+                  value={silt}
+                  onChange={(e) => setSilt(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500">{t.clay}</label>
+                <input 
+                  type="number" 
+                  value={clay}
+                  onChange={(e) => setClay(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -944,9 +992,9 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
               nitrogen: parseFloat(nitrogen),
               soc: parseFloat(soc),
               texture: 'Loamy',
-              sand: 300,
-              silt: 400,
-              clay: 300,
+              sand: parseFloat(sand),
+              silt: parseFloat(silt),
+              clay: parseFloat(clay),
               isEstimated: false
             })}
             className="flex-1 py-3 text-sm font-bold bg-[#2D6A4F] text-white rounded-xl shadow-lg active:scale-95 transition-all"
@@ -1110,6 +1158,83 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
         </p>
       </div>
     </motion.div>
+  );
+}
+
+function SoilTextureTriangle({ sand, silt, clay, t }: { sand: number, silt: number, clay: number, t: any }) {
+  // Normalize to 100%
+  const total = sand + silt + clay || 1;
+  const s = (sand / total) * 100;
+  const si = (silt / total) * 100;
+  const c = (clay / total) * 100;
+
+  // Triangle vertices: Top (50, 0), Bottom Left (0, 86.6), Bottom Right (100, 86.6)
+  // Point P(s, si, c):
+  // P.x = (s * 0 + si * 100 + c * 50) / 100
+  // P.y = (s * 86.6 + si * 86.6 + c * 0) / 100
+  const px = (si + c * 0.5);
+  const py = (100 - c) * 0.866;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-500">{t.soil_texture}</span>
+        <div className="flex gap-2">
+          <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{s.toFixed(0)}% {t.sand}</span>
+          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{si.toFixed(0)}% {t.silt}</span>
+          <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{c.toFixed(0)}% {t.clay}</span>
+        </div>
+      </div>
+      
+      <div className="relative aspect-[1.15/1] w-full max-w-[240px] mx-auto bg-white rounded-xl p-4 border border-gray-100 shadow-inner">
+        <svg viewBox="-10 -10 120 106.6" className="w-full h-full overflow-visible">
+          {/* Background Triangle */}
+          <path 
+            d="M 50 0 L 100 86.6 L 0 86.6 Z" 
+            fill="#F8F9FA" 
+            stroke="#E5E7EB" 
+            strokeWidth="1"
+          />
+          
+          {/* Grid Lines */}
+          {[20, 40, 60, 80].map(val => (
+            <React.Fragment key={val}>
+              {/* Clay lines (horizontal) */}
+              <line x1={val/2} y1={86.6 - (val * 0.866)} x2={100 - val/2} y2={86.6 - (val * 0.866)} stroke="#E5E7EB" strokeWidth="0.5" strokeDasharray="2,2" />
+              {/* Sand lines */}
+              <line x1={val} y1={86.6} x2={val/2 + 50} y2={val * 0.866 / 2} stroke="#E5E7EB" strokeWidth="0.5" strokeDasharray="2,2" />
+              {/* Silt lines */}
+              <line x1={100-val} y1={86.6} x2={50 - val/2} y2={val * 0.866 / 2} stroke="#E5E7EB" strokeWidth="0.5" strokeDasharray="2,2" />
+            </React.Fragment>
+          ))}
+
+          {/* Labels */}
+          <text x="50" y="-5" textAnchor="middle" fontSize="6" fontWeight="bold" fill="#EF4444">{t.clay}</text>
+          <text x="-5" y="92" textAnchor="middle" fontSize="6" fontWeight="bold" fill="#D97706">{t.sand}</text>
+          <text x="105" y="92" textAnchor="middle" fontSize="6" fontWeight="bold" fill="#2563EB">{t.silt}</text>
+
+          {/* Data Point */}
+          <motion.circle 
+            initial={{ r: 0 }}
+            animate={{ r: 4 }}
+            cx={px} 
+            cy={py} 
+            fill="#2D6A4F" 
+            stroke="white" 
+            strokeWidth="1.5"
+            className="shadow-lg"
+          />
+          <motion.circle 
+            initial={{ r: 0 }}
+            animate={{ r: 8 }}
+            cx={px} 
+            cy={py} 
+            fill="#2D6A4F" 
+            fillOpacity="0.2"
+          />
+        </svg>
+      </div>
+    </div>
   );
 }
 
