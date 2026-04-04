@@ -40,7 +40,7 @@ export interface Crop {
   sowingMonths: number[];
   description: { [key: string]: string };
   soilType: { [key: string]: string };
-  rotationGroup: 'cereal' | 'legume' | 'oilseed' | 'vegetable' | 'fruit';
+  rotationGroup: 'cereal' | 'legume' | 'oilseed' | 'vegetable' | 'fruit' | 'fiber' | 'cash' | 'beverage' | 'millet' | 'pulse' | 'spice' | 'plantation';
 }
 
 export interface Disease {

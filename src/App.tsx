@@ -328,21 +328,35 @@ function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActi
           {state.weather && state.weather.humidity > 80 && (
             <AlertCard 
               type="warning" 
-              title="Fungal Risk High" 
-              desc="Humidity is above 80%. Check crops for signs of fungus."
+              title={t.fungal_risk_title} 
+              desc={t.fungal_risk_desc}
             />
           )}
-          {state.weather && state.weather.temp > 35 && (
+          {state.weather && (state.weather.temp > 35 || state.weather.forecast?.some(d => d.high > 35)) && (
             <AlertCard 
               type="danger" 
-              title="Heat Stress Alert" 
-              desc="Temperatures are high. Ensure adequate irrigation today."
+              title={t.heat_stress_title} 
+              desc={t.heat_stress_desc}
+            />
+          )}
+          {state.weather && (state.weather.temp < 10 || state.weather.forecast?.some(d => d.low < 10)) && (
+            <AlertCard 
+              type="warning" 
+              title={t.frost_alert_title} 
+              desc={t.frost_alert_desc}
+            />
+          )}
+          {state.weather?.forecast?.some(day => day.rainProb > 70) && (
+            <AlertCard 
+              type="info" 
+              title={t.heavy_rain_title} 
+              desc={t.heavy_rain_desc}
             />
           )}
           <AlertCard 
             type="info" 
-            title="Ideal Sowing Window" 
-            desc="Current conditions are perfect for Mustard sowing."
+            title={t.sowing_window_title} 
+            desc={t.sowing_window_desc}
           />
         </div>
       </section>
