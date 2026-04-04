@@ -66,4 +66,5 @@ export interface AppState {
   error: string | null;
   isRefreshing?: boolean;
   previousCropId?: string;
+  theme?: 'light' | 'dark';
 }
