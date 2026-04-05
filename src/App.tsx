@@ -183,7 +183,7 @@ export default function App() {
         <div className="flex items-center gap-3">
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors active:scale-95"
+            className="p-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-900 transition-colors active:scale-95"
           >
             {state.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -200,7 +200,7 @@ export default function App() {
 
       <main className="p-4 max-w-2xl mx-auto">
         {state.error && (
-          <div className="bg-red-50 border border-red-100 p-3 rounded-lg mb-4 flex items-center justify-between text-red-700 text-sm">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 p-3 rounded-lg mb-4 flex items-center justify-between text-red-700 dark:text-red-400 text-sm">
             <div className="flex items-center gap-2">
               <AlertTriangle size={16} />
               {state.error}
@@ -269,9 +269,9 @@ function NavButton({ icon, label, active, onClick }: { icon: React.ReactNode, la
 
 function LoadingScreen({ onSkip }: { onSkip?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 gap-4">
+    <div className="flex flex-col items-center justify-center py-20 gap-4 bg-bg min-h-[60vh]">
       <div className="w-12 h-12 border-4 border-[#2D6A4F] border-t-transparent rounded-full animate-spin"></div>
-      <p className="text-gray-500 animate-pulse">Loading KisanSense...</p>
+      <p className="text-gray-500 dark:text-slate-400 animate-pulse">Loading KisanSense...</p>
       {onSkip && (
         <button 
           onClick={onSkip}
@@ -297,14 +297,14 @@ function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActi
         <p className="text-green-100 text-sm mb-6 opacity-90">Listen to your land. Grow smarter crops.</p>
         
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+          <div className="bg-white/10 dark:bg-black/20 backdrop-blur-sm rounded-xl p-3 border border-white/20 dark:border-white/10">
             <div className="flex items-center gap-2 mb-1">
               <Droplets size={16} className="text-green-300" />
               <span className="text-xs font-medium text-green-200">Soil pH</span>
             </div>
             <div className="text-xl font-bold">{state.soil?.ph.toFixed(1) || '--'}</div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+          <div className="bg-white/10 dark:bg-black/20 backdrop-blur-sm rounded-xl p-3 border border-white/20 dark:border-white/10">
             <div className="flex items-center gap-2 mb-1">
               <Thermometer size={16} className="text-orange-300" />
               <span className="text-xs font-medium text-orange-200">Temp</span>
@@ -315,28 +315,28 @@ function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActi
       </section>
 
       <div className="grid grid-cols-2 gap-4">
-        <button onClick={() => setActiveTab('soil')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-800 transition-colors">
+        <button onClick={() => setActiveTab('soil')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
           <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center text-[#2D6A4F] mb-3">
             <Droplets size={20} />
           </div>
           <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.soil_intelligence}</h3>
           <p className="text-[10px] text-gray-500 dark:text-slate-400">Check NPK & pH levels</p>
         </button>
-        <button onClick={() => setActiveTab('crops')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-800 transition-colors">
+        <button onClick={() => setActiveTab('crops')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
           <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center text-amber-600 mb-3">
             <Sprout size={20} />
           </div>
           <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.crop_advisor}</h3>
           <p className="text-[10px] text-gray-500 dark:text-slate-400">Best crops for your land</p>
         </button>
-        <button onClick={() => setActiveTab('disease')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-800 transition-colors">
+        <button onClick={() => setActiveTab('disease')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
           <div className="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center text-red-600 mb-3">
             <Database size={20} />
           </div>
           <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.disease_library}</h3>
           <p className="text-[10px] text-gray-500 dark:text-slate-400">Identify & treat crop diseases</p>
         </button>
-        <button onClick={() => setActiveTab('weather')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-800 transition-colors">
+        <button onClick={() => setActiveTab('weather')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
           <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center text-blue-600 mb-3">
             <CloudSun size={20} />
           </div>
@@ -471,15 +471,15 @@ function SoilView({ state, t, onRefresh, onManualInput }: { state: AppState, t: 
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-gray-500 dark:text-slate-400">{t.ph_level}</span>
             <span className={cn("px-3 py-1 rounded-full text-xs font-bold", 
-              state.soil.ph < 6 ? "bg-red-100 text-red-700" : 
-              state.soil.ph > 8 ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
+              state.soil.ph < 6 ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" : 
+              state.soil.ph > 8 ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
             )}>
               {state.soil.ph < 6 ? 'Acidic' : state.soil.ph > 8 ? 'Alkaline' : 'Neutral'}
             </span>
           </div>
           <div className="relative h-4 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 rounded-full">
             <div 
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-gray-800 rounded-full shadow-md transition-all duration-500"
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white dark:bg-slate-100 border-2 border-gray-800 dark:border-slate-900 rounded-full shadow-md transition-all duration-500"
               style={{ left: `${(state.soil.ph / 14) * 100}%` }}
             ></div>
           </div>
@@ -491,7 +491,7 @@ function SoilView({ state, t, onRefresh, onManualInput }: { state: AppState, t: 
         </div>
       </div>
 
-      <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30 p-4 rounded-xl">
+      <div className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/30 p-4 rounded-xl">
         <h4 className="font-bold text-[#2D6A4F] text-sm mb-2">Expert Tip</h4>
         <p className="text-xs text-green-700 dark:text-green-300 leading-relaxed">
           Your soil is slightly {state.soil.ph < 7 ? 'acidic' : 'alkaline'}. Consider adding {state.soil.ph < 7 ? 'lime' : 'gypsum'} to balance it for better wheat yield.
@@ -506,10 +506,10 @@ function Gauge({ label, value, max, unit, color }: { label: string, value: numbe
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-xs">
-        <span className="font-medium text-gray-600">{label}</span>
-        <span className="font-bold text-gray-800">{value} {unit}</span>
+        <span className="font-medium text-gray-600 dark:text-slate-400">{label}</span>
+        <span className="font-bold text-gray-800 dark:text-slate-100">{value} {unit}</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
         <motion.div 
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
@@ -544,21 +544,21 @@ function RotationFlowchart({ previousCrop, nextCrop, language }: { previousCrop:
   return (
     <div className="flex items-center justify-between py-4 px-2">
       <div className="flex flex-col items-center gap-2 w-20 text-center">
-        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 border-2 border-dashed border-gray-300">
+        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-900 flex items-center justify-center text-gray-500 dark:text-slate-400 border-2 border-dashed border-gray-300 dark:border-slate-800">
           {previousCrop ? getIcon(previousCrop.rotationGroup) : <Search size={16} />}
         </div>
-        <span className="text-[9px] font-bold text-gray-500 uppercase truncate w-full">
+        <span className="text-[9px] font-bold text-gray-500 dark:text-slate-400 uppercase truncate w-full">
           {previousCrop ? (previousCrop.name[language] || previousCrop.name.en) : 'Previous'}
         </span>
       </div>
 
-      <ArrowRight size={16} className="text-gray-300" />
+      <ArrowRight size={16} className="text-gray-300 dark:text-slate-700" />
 
       <div className="flex flex-col items-center gap-2 w-24 text-center">
         <motion.div 
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-[#2D6A4F] border-2 border-[#2D6A4F]"
+          className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-[#2D6A4F] border-2 border-[#2D6A4F]"
         >
           {getIcon(nextCrop.rotationGroup)}
         </motion.div>
@@ -567,13 +567,13 @@ function RotationFlowchart({ previousCrop, nextCrop, language }: { previousCrop:
         </span>
       </div>
 
-      <ArrowRight size={16} className="text-gray-300" />
+      <ArrowRight size={16} className="text-gray-300 dark:text-slate-700" />
 
       <div className="flex flex-col items-center gap-2 w-20 text-center opacity-50">
-        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 border-2 border-blue-100">
+        <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 border-2 border-blue-100 dark:border-blue-900/40">
           {thirdCrop ? getIcon(thirdCrop.rotationGroup) : <Sprout size={16} />}
         </div>
-        <span className="text-[9px] font-bold text-blue-600 uppercase truncate w-full">
+        <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase truncate w-full">
           {thirdCrop ? (thirdCrop.name[language] || thirdCrop.name.en) : 'Future'}
         </span>
       </div>
@@ -664,7 +664,7 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
           <h3 className="font-bold text-lg">{t.crop_rotation}</h3>
         </div>
 
-        <div className="bg-white/50 rounded-xl p-4 border border-[#2D6A4F]/10 space-y-2">
+        <div className="bg-white/50 dark:bg-black/20 rounded-xl p-4 border border-[#2D6A4F]/10 space-y-2">
           <h4 className="text-sm font-bold text-[#2D6A4F] flex items-center gap-2">
             <Info size={16} />
             {t.rotation_importance_title}
@@ -688,7 +688,7 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
             <select 
               value={state.previousCropId}
               onChange={(e) => onPreviousCropChange(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+              className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none text-gray-800 dark:text-slate-100"
             >
               <option value="">-- Select --</option>
               {CROPS.map(c => (
@@ -701,11 +701,11 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white p-4 rounded-xl border border-[#2D6A4F]/20 shadow-sm space-y-3"
+              className="card-bg p-4 rounded-xl border border-[#2D6A4F]/20 shadow-sm space-y-3"
             >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider">{t.suggested_next}</span>
-                <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">Recommended</span>
+                <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full font-bold uppercase">Recommended</span>
               </div>
               
               <RotationFlowchart 
@@ -714,16 +714,16 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
                 language={state.language}
               />
 
-              <div className="flex items-center gap-3 border-t border-gray-50 pt-3">
-                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-[#2D6A4F]">
+              <div className="flex items-center gap-3 border-t border-gray-50 dark:border-slate-800 pt-3">
+                <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center text-[#2D6A4F]">
                   <Sprout size={20} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-800">{advice.nextCrop.name[state.language] || advice.nextCrop.name.en}</h4>
-                  <p className="text-[10px] text-gray-500">{advice.reason}</p>
+                  <h4 className="font-bold text-gray-800 dark:text-slate-100">{advice.nextCrop.name[state.language] || advice.nextCrop.name.en}</h4>
+                  <p className="text-[10px] text-gray-500 dark:text-slate-400">{advice.reason}</p>
                 </div>
               </div>
-              <p className="text-xs text-gray-600 italic leading-relaxed border-t border-gray-50 pt-2">
+              <p className="text-xs text-gray-600 dark:text-slate-400 italic leading-relaxed border-t border-gray-50 dark:border-slate-800 pt-2">
                 "{advice.benefit}"
               </p>
             </motion.div>
@@ -751,7 +751,7 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
           return (
             <div key={crop.id} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden transition-colors duration-300">
               <div 
-                className="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50 dark:active:bg-slate-800 transition-colors"
+                className="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50 dark:active:bg-slate-900 transition-colors"
                 onClick={() => setExpandedCropId(isExpanded ? null : crop.id)}
               >
                 <div className="flex items-center gap-4">
@@ -775,14 +775,14 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
                       "p-2 rounded-lg border transition-all active:scale-90",
                       isComparing 
                         ? "bg-green-600 border-green-600 text-white" 
-                        : "bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-400"
+                        : "bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-400"
                     )}
                   >
                     <Scale size={16} />
                   </button>
                   <div className="text-right">
                     <div className="text-xs font-bold text-[#2D6A4F] mb-1">{score}% Match</div>
-                    <div className="w-16 h-1.5 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-16 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                       <div className="h-full bg-[#2D6A4F]" style={{ width: `${score}%` }}></div>
                     </div>
                   </div>
@@ -798,12 +798,12 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="border-t border-gray-50 bg-gray-50/50"
+                    className="border-t border-gray-50 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50"
                   >
                     <div className="p-4 space-y-4">
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Description</span>
-                        <p className="text-xs text-gray-600 leading-relaxed">
+                        <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
                           {crop.description[state.language] || crop.description.en}
                         </p>
                       </div>
@@ -811,24 +811,24 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{t.sowing_time}</span>
-                          <p className="text-xs font-bold text-gray-800">
+                          <p className="text-xs font-bold text-gray-800 dark:text-slate-100">
                             {crop.sowingMonths.map(getMonthName).join(', ')}
                           </p>
                         </div>
                         <div className="space-y-1">
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Soil Suitability</span>
-                          <p className="text-xs font-bold text-gray-800">
+                          <p className="text-xs font-bold text-gray-800 dark:text-slate-100">
                             {crop.soilType[state.language] || crop.soilType.en}
                           </p>
                         </div>
                       </div>
                       
                       <div className="flex gap-4 pt-2">
-                        <div className="flex-1 bg-white p-2 rounded-lg border border-gray-100">
+                        <div className="flex-1 card-bg p-2 rounded-lg border border-gray-100 dark:border-slate-800">
                           <span className="text-[10px] text-gray-400 block mb-1">Ideal pH</span>
                           <span className="text-xs font-bold text-[#2D6A4F]">{crop.minPh} - {crop.maxPh}</span>
                         </div>
-                        <div className="flex-1 bg-white p-2 rounded-lg border border-gray-100">
+                        <div className="flex-1 card-bg p-2 rounded-lg border border-gray-100 dark:border-slate-800">
                           <span className="text-[10px] text-gray-400 block mb-1">Ideal Temp</span>
                           <span className="text-xs font-bold text-orange-600">{crop.minTemp}°C - {crop.maxTemp}°C</span>
                         </div>
@@ -861,17 +861,17 @@ function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefre
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-800">{t.weather_alerts}</h2>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t.weather_alerts}</h2>
         <div className="flex items-center gap-2">
           <button 
             onClick={onRefresh}
             disabled={state.isRefreshing}
-            className={cn("p-2 rounded-lg bg-white border border-gray-200 text-gray-600 active:scale-95 transition-all", state.isRefreshing && "animate-spin")}
+            className={cn("p-2 rounded-lg card-bg text-gray-600 dark:text-slate-400 active:scale-95 transition-all", state.isRefreshing && "animate-spin")}
           >
             <CloudSun size={16} />
           </button>
           {state.weather.isEstimated && (
-            <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">
+            <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold">
               ESTIMATED
             </span>
           )}
@@ -879,7 +879,7 @@ function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefre
       </div>
       
       {state.weather.isEstimated && (
-        <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-center justify-between gap-2 text-amber-800 text-[10px] leading-tight">
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 p-3 rounded-xl flex items-center justify-between gap-2 text-amber-800 dark:text-amber-200 text-[10px] leading-tight">
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} className="shrink-0" />
             Weather service is currently busy. Showing estimated values.
@@ -1013,7 +1013,7 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
                 </div>
               </div>
               <span className={cn("text-[10px] px-2 py-1 rounded-full font-bold uppercase", 
-                d.severity === 'High' ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"
+                d.severity === 'High' ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" : "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
               )}>
                 {d.severity} Risk
               </span>
@@ -1086,11 +1086,11 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl"
+        className="card-bg rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl"
       >
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-bold text-gray-800">{t.manual_input}</h3>
-          <button onClick={onClose} className="p-1 text-gray-400"><X size={20} /></button>
+        <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
+          <h3 className="font-bold text-gray-800 dark:text-slate-100">{t.manual_input}</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300"><X size={20} /></button>
         </div>
         
         <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
@@ -1102,7 +1102,7 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
                 step="0.1"
                 value={ph}
                 onChange={(e) => setPh(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none text-gray-800 dark:text-slate-100"
               />
             </div>
             <div className="space-y-1">
@@ -1111,7 +1111,7 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
                 type="number" 
                 value={nitrogen}
                 onChange={(e) => setNitrogen(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none text-gray-800 dark:text-slate-100"
               />
             </div>
           </div>
@@ -1123,7 +1123,7 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
               step="0.1"
               value={soc}
               onChange={(e) => setSoc(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+              className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none text-gray-800 dark:text-slate-100"
             />
           </div>
 
@@ -1136,7 +1136,7 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
                   type="number" 
                   value={sand}
                   onChange={(e) => setSand(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+                  className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none text-gray-800 dark:text-slate-100"
                 />
               </div>
               <div className="space-y-1">
@@ -1145,7 +1145,7 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
                   type="number" 
                   value={silt}
                   onChange={(e) => setSilt(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+                  className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none text-gray-800 dark:text-slate-100"
                 />
               </div>
               <div className="space-y-1">
@@ -1154,17 +1154,17 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
                   type="number" 
                   value={clay}
                   onChange={(e) => setClay(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none"
+                  className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none text-gray-800 dark:text-slate-100"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-4 bg-gray-50 flex gap-3">
+        <div className="p-4 bg-gray-50 dark:bg-slate-900/50 flex gap-3 border-t border-gray-100 dark:border-slate-800">
           <button 
             onClick={onClose}
-            className="flex-1 py-3 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
+            className="flex-1 py-3 text-sm font-bold text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-900 rounded-xl transition-colors"
           >
             {t.cancel}
           </button>
@@ -1269,7 +1269,7 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
       initial={{ opacity: 0, y: 100 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 100 }}
-      className="fixed inset-0 z-[60] bg-white dark:bg-slate-900 flex flex-col"
+      className="fixed inset-0 z-[60] bg-bg flex flex-col"
     >
       <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -1296,7 +1296,7 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
                 <button 
                   key={q} 
                   onClick={() => handleUserMessage(q)}
-                  className="text-xs bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 px-3 py-2 rounded-full text-gray-600 dark:text-slate-300 transition-colors border border-gray-200 dark:border-slate-700"
+                  className="text-xs bg-gray-100 dark:bg-slate-900 hover:bg-gray-200 dark:hover:bg-white/5 px-3 py-2 rounded-full text-gray-600 dark:text-slate-300 transition-colors border border-gray-200 dark:border-slate-800"
                 >
                   {q}
                 </button>
@@ -1307,7 +1307,7 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
         {messages.map((m, i) => (
           <div key={i} className={cn("flex", m.role === 'user' ? "justify-end" : "justify-start")}>
             <div className={cn("max-w-[80%] p-3 rounded-2xl text-sm shadow-sm", 
-              m.role === 'user' ? "bg-[#2D6A4F] text-white rounded-tr-none" : "bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-100 rounded-tl-none"
+              m.role === 'user' ? "bg-[#2D6A4F] text-white rounded-tr-none" : "bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-slate-100 rounded-tl-none"
             )}>
               {m.text}
             </div>
@@ -1315,7 +1315,7 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
         ))}
         {isTyping && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none flex gap-1">
+            <div className="bg-gray-100 dark:bg-slate-900 p-3 rounded-2xl rounded-tl-none flex gap-1">
               <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
               <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></div>
               <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></div>
@@ -1335,7 +1335,7 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
         >
           <Mic size={32} />
         </button>
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+        <p className="text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-widest">
           {isListening ? 'Listening...' : 'Tap to Speak'}
         </p>
       </div>
@@ -1360,11 +1360,11 @@ function SoilTextureTriangle({ sand, silt, clay, t }: { sand: number, silt: numb
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-500">{t.soil_texture}</span>
+        <span className="text-sm font-medium text-gray-500 dark:text-slate-400">{t.soil_texture}</span>
         <div className="flex gap-2">
-          <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{s.toFixed(0)}% {t.sand}</span>
-          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{si.toFixed(0)}% {t.silt}</span>
-          <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{c.toFixed(0)}% {t.clay}</span>
+          <span className="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">{s.toFixed(0)}% {t.sand}</span>
+          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">{si.toFixed(0)}% {t.silt}</span>
+          <span className="text-[10px] font-bold text-red-600 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full">{c.toFixed(0)}% {t.clay}</span>
         </div>
       </div>
       
@@ -1374,7 +1374,7 @@ function SoilTextureTriangle({ sand, silt, clay, t }: { sand: number, silt: numb
           <path 
             d="M 50 0 L 100 86.6 L 0 86.6 Z" 
             fill="currentColor" 
-            className="text-gray-50 dark:text-slate-800/50"
+            className="text-gray-50 dark:text-slate-900"
             stroke="currentColor" 
             strokeWidth="1"
             strokeOpacity="0.1"
@@ -1384,11 +1384,11 @@ function SoilTextureTriangle({ sand, silt, clay, t }: { sand: number, silt: numb
           {[20, 40, 60, 80].map(val => (
             <React.Fragment key={val}>
               {/* Clay lines (horizontal) */}
-              <line x1={val/2} y1={86.6 - (val * 0.866)} x2={100 - val/2} y2={86.6 - (val * 0.866)} stroke="#E5E7EB" strokeWidth="0.5" strokeDasharray="2,2" />
+              <line x1={val/2} y1={86.6 - (val * 0.866)} x2={100 - val/2} y2={86.6 - (val * 0.866)} stroke="currentColor" className="text-gray-200 dark:text-slate-700" strokeWidth="0.5" strokeDasharray="2,2" />
               {/* Sand lines */}
-              <line x1={val} y1={86.6} x2={val/2 + 50} y2={val * 0.866 / 2} stroke="#E5E7EB" strokeWidth="0.5" strokeDasharray="2,2" />
+              <line x1={val} y1={86.6} x2={val/2 + 50} y2={val * 0.866 / 2} stroke="currentColor" className="text-gray-200 dark:text-slate-700" strokeWidth="0.5" strokeDasharray="2,2" />
               {/* Silt lines */}
-              <line x1={100-val} y1={86.6} x2={50 - val/2} y2={val * 0.866 / 2} stroke="#E5E7EB" strokeWidth="0.5" strokeDasharray="2,2" />
+              <line x1={100-val} y1={86.6} x2={50 - val/2} y2={val * 0.866 / 2} stroke="currentColor" className="text-gray-200 dark:text-slate-700" strokeWidth="0.5" strokeDasharray="2,2" />
             </React.Fragment>
           ))}
 
@@ -1440,7 +1440,7 @@ function LanguageSelector({ currentLanguage, onLanguageChange }: { currentLangua
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg card-bg border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors active:scale-95"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg card-bg border border-gray-200 dark:border-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-900 transition-colors active:scale-95"
       >
         <Languages size={16} className="text-[#2D6A4F]" />
         <span className="text-xs font-bold uppercase tracking-tight">
@@ -1469,7 +1469,7 @@ function LanguageSelector({ currentLanguage, onLanguageChange }: { currentLangua
                   "flex items-center justify-between px-4 py-2.5 text-sm transition-colors",
                   currentLanguage === lang 
                     ? "bg-green-50 dark:bg-green-900/20 text-[#2D6A4F] font-bold" 
-                    : "text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800"
+                    : "text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-900"
                 )}
               >
                 <div className="flex flex-col items-start">
@@ -1499,7 +1499,7 @@ function CropCompareModal({ crops, onClose, state, t }: { crops: any[], onClose:
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl"
+        className="card-bg w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="p-6 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
@@ -1509,7 +1509,7 @@ function CropCompareModal({ crops, onClose, state, t }: { crops: any[], onClose:
             </div>
             <h3 className="font-bold text-lg text-gray-800 dark:text-slate-100">Crop Comparison</h3>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-900 rounded-full transition-colors">
             <X size={20} className="text-gray-400" />
           </button>
         </div>
@@ -1517,7 +1517,7 @@ function CropCompareModal({ crops, onClose, state, t }: { crops: any[], onClose:
         <div className="p-6 overflow-y-auto max-h-[70vh]">
           {crops.length < 2 ? (
             <div className="py-10 text-center space-y-4">
-              <div className="w-16 h-16 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto text-gray-300">
+              <div className="w-16 h-16 bg-gray-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto text-gray-300 border border-transparent dark:border-slate-800">
                 <Scale size={32} />
               </div>
               <p className="text-sm text-gray-500">Please select two crops to compare their details side-by-side.</p>
@@ -1554,7 +1554,7 @@ function CropCompareModal({ crops, onClose, state, t }: { crops: any[], onClose:
           )}
         </div>
 
-        <div className="p-6 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-800">
+        <div className="p-6 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-100 dark:border-slate-800">
           <button 
             onClick={onClose}
             className="w-full py-3 bg-[#2D6A4F] text-white rounded-xl font-bold shadow-lg shadow-green-900/20 active:scale-[0.98] transition-all"
@@ -1573,7 +1573,7 @@ function CompareItem({ label, values }: { label: string, values: string[] }) {
       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block text-center">{label}</span>
       <div className="grid grid-cols-2 gap-4">
         {values.map((v, i) => (
-          <div key={i} className="bg-gray-50 dark:bg-slate-800 p-3 rounded-xl text-center">
+          <div key={i} className="bg-gray-50 dark:bg-slate-900 p-3 rounded-xl text-center border border-transparent dark:border-slate-800">
             <span className="text-xs font-bold text-gray-700 dark:text-slate-200">{v}</span>
           </div>
         ))}

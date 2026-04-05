@@ -1,26 +1,30 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  
+:root {
   --color-bg: #F8F9FA;
   --color-text: #1A1A1A;
   --color-card: #FFFFFF;
   --color-border: #E5E7EB;
+}
 
-  --dark-color-bg: #0F172A;
-  --dark-color-text: #F8FAFC;
-  --dark-color-card: #1E293B;
-  --dark-color-border: #334155;
+.dark {
+  --color-bg: #000000;
+  --color-text: #FFFFFF;
+  --color-card: #000000;
+  --color-border: #1A1A1A;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-bg: var(--color-bg);
+  --color-text: var(--color-text);
+  --color-card: var(--color-card);
+  --color-border: var(--color-border);
 }
 
 @layer base {
   body {
     @apply bg-bg text-text transition-colors duration-300;
-  }
-
-  .dark body {
-    @apply bg-[var(--dark-color-bg)] text-[var(--dark-color-text)];
   }
 }
 
@@ -30,10 +34,6 @@
   }
   
   .card-bg {
-    @apply bg-card border-border;
-  }
-  
-  .dark .card-bg {
-    @apply bg-[var(--dark-color-card)] border-[var(--dark-color-border)];
+    @apply bg-card border-border border;
   }
 }
