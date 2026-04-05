@@ -30,6 +30,7 @@ import {
   Moon,
   Sun,
   Scale,
+  Award,
 } from 'lucide-react';
 import { AppState, Language, SoilData, WeatherData } from './types';
 import { CROPS, DISEASES, TRANSLATIONS } from './constants';
@@ -584,15 +585,41 @@ function RotationFlowchart({ previousCrop, nextCrop, language }: { previousCrop:
 const calculateCropScore = (crop: any, soil: SoilData | null, weather: WeatherData | null) => {
   if (!soil) return 0;
   let score = 100;
+  
+  // pH check
   if (soil.ph < crop.minPh || soil.ph > crop.maxPh) score -= 30;
+  
+  // SOC check (Organic Carbon) - most crops prefer > 0.5%
+  if (soil.soc < 0.5) score -= 15;
+  else if (soil.soc > 0.8) score += 5;
+
+  // Texture check
+  const texture = (soil.texture || '').toLowerCase();
+  const preferredSoil = (crop.soilType.en || '').toLowerCase();
+  if (preferredSoil.includes(texture) && texture !== 'unknown' && texture !== '') {
+    score += 10;
+  } else if (texture !== 'unknown' && texture !== '') {
+    score -= 10;
+  }
+
+  // Nitrogen check (existing)
   if (soil.nitrogen < 50 && crop.id === 'wheat') score -= 20;
-  return Math.max(score, 40);
+  
+  return Math.min(Math.max(score, 40), 100);
 };
 
 function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any, onPreviousCropChange: (id: string) => void }) {
   const [expandedCropId, setExpandedCropId] = useState<string | null>(null);
   const [compareCropIds, setCompareCropIds] = useState<string[]>([]);
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+
+  const topCrops = [...CROPS]
+    .map(crop => ({
+      crop,
+      score: calculateCropScore(crop, state.soil, state.weather)
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
 
   const toggleCompare = (id: string) => {
     setCompareCropIds(prev => {
@@ -728,6 +755,52 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
               </p>
             </motion.div>
           )}
+        </div>
+      </div>
+
+      {/* Top Recommendations Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-[#2D6A4F]">
+          <Award size={20} />
+          <h3 className="font-bold text-lg">{t.top_recommendations}</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {topCrops.map(({ crop, score }, index) => (
+            <motion.div
+              key={`top-${crop.id}`}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className="card-bg p-4 rounded-2xl border border-[#2D6A4F]/20 shadow-sm relative overflow-hidden group cursor-pointer"
+              onClick={() => setExpandedCropId(crop.id)}
+            >
+              <div className="absolute top-0 right-0 p-2">
+                <div className="bg-[#2D6A4F] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
+                  #{index + 1}
+                </div>
+              </div>
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center text-[#2D6A4F] group-hover:scale-110 transition-transform">
+                  <Sprout size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-gray-800 dark:text-slate-100 line-clamp-1">
+                    {crop.name[state.language] || crop.name.en}
+                  </h4>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    <span className="text-[10px] font-bold text-[#2D6A4F]">{score}%</span>
+                    <span className="text-[10px] text-gray-400 uppercase tracking-tight">{t.soil_match}</span>
+                  </div>
+                </div>
+                <div className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-[#2D6A4F]" 
+                    style={{ width: `${score}%` }}
+                  ></div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
 
@@ -976,11 +1049,17 @@ function WeatherStat({ icon, label, value }: { icon: React.ReactNode, label: str
 
 function DiseaseView({ state, t }: { state: AppState, t: any }) {
   const [search, setSearch] = useState('');
+  const [selectedCrop, setSelectedCrop] = useState<string | null>(null);
   
-  const filteredDiseases = DISEASES.filter(d => 
-    (d.name[state.language] || d.name.en).toLowerCase().includes(search.toLowerCase()) ||
-    (d.crop).toLowerCase().includes(search.toLowerCase())
-  );
+  const availableCrops = Array.from(new Set(DISEASES.map(d => d.crop)));
+
+  const filteredDiseases = DISEASES.filter(d => {
+    const matchesSearch = (d.name[state.language] || d.name.en).toLowerCase().includes(search.toLowerCase()) ||
+                         (d.crop).toLowerCase().includes(search.toLowerCase()) ||
+                         (d.symptoms[state.language] || d.symptoms.en).toLowerCase().includes(search.toLowerCase());
+    const matchesCrop = !selectedCrop || d.crop === selectedCrop;
+    return matchesSearch && matchesCrop;
+  });
 
   return (
     <div className="space-y-6 pb-10">
@@ -988,15 +1067,49 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
         <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t.disease_library}</h2>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-        <input 
-          type="text" 
-          placeholder="Search disease or crop..." 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full card-bg rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/20 transition-colors duration-300"
-        />
+      <div className="space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search disease or symptoms..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full card-bg rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/20 transition-colors duration-300"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+          <button
+            onClick={() => setSelectedCrop(null)}
+            className={cn(
+              "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all",
+              !selectedCrop 
+                ? "bg-[#2D6A4F] text-white shadow-md shadow-[#2D6A4F]/20" 
+                : "card-bg text-gray-500 border border-gray-100 dark:border-slate-800"
+            )}
+          >
+            {t.all_crops || 'All Crops'}
+          </button>
+          {availableCrops.map(cropId => {
+            const crop = CROPS.find(c => c.id === cropId);
+            const cropName = crop ? (crop.name[state.language] || crop.name.en) : cropId;
+            return (
+              <button
+                key={cropId}
+                onClick={() => setSelectedCrop(cropId)}
+                className={cn(
+                  "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all",
+                  selectedCrop === cropId
+                    ? "bg-[#2D6A4F] text-white shadow-md shadow-[#2D6A4F]/20" 
+                    : "card-bg text-gray-500 border border-gray-100 dark:border-slate-800"
+                )}
+              >
+                {cropName}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="space-y-6">
