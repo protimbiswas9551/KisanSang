@@ -18,6 +18,15 @@ export interface ForecastDay {
   icon: string;
 }
 
+export interface HourlyData {
+  time: string;
+  temp: number;
+  rainProb: number;
+  weatherCode: number;
+  description: string;
+  icon: string;
+}
+
 export interface WeatherData {
   temp: number;
   humidity: number;
@@ -27,6 +36,7 @@ export interface WeatherData {
   windSpeed: number;
   isEstimated?: boolean;
   forecast?: ForecastDay[];
+  hourly?: HourlyData[];
 }
 
 export interface Crop {

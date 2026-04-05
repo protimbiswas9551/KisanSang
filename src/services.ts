@@ -116,7 +116,7 @@ export async function fetchSoilData(lat: number, lng: number): Promise<SoilData>
 
 export async function fetchWeatherData(lat: number, lng: number): Promise<WeatherData> {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,rain&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,rain&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7`;
     const res = await fetchWithRetry(url);
     const data = await res.json();
 
@@ -157,6 +157,19 @@ export async function fetchWeatherData(lat: number, lng: number): Promise<Weathe
       };
     });
 
+    const hourly = data.hourly.time.slice(0, 24).map((time: string, i: number) => {
+      const hCode = data.hourly.weather_code[i];
+      const hInfo = weatherMap[hCode] || { desc: 'Unknown', icon: '01d' };
+      return {
+        time,
+        temp: data.hourly.temperature_2m[i],
+        rainProb: data.hourly.precipitation_probability[i],
+        weatherCode: hCode,
+        description: hInfo.desc,
+        icon: hInfo.icon
+      };
+    });
+
     return {
       temp: current.temperature_2m,
       humidity: current.relative_humidity_2m,
@@ -165,7 +178,8 @@ export async function fetchWeatherData(lat: number, lng: number): Promise<Weathe
       icon: weatherInfo.icon,
       windSpeed: current.wind_speed_10m,
       isEstimated: false,
-      forecast
+      forecast,
+      hourly
     };
   } catch (err) {
     console.warn("WeatherData fallback used due to API error:", err);
@@ -177,7 +191,8 @@ export async function fetchWeatherData(lat: number, lng: number): Promise<Weathe
       icon: '01d', 
       windSpeed: 5,
       isEstimated: true,
-      forecast: []
+      forecast: [],
+      hourly: []
     };
   }
 }

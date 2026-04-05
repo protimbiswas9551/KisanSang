@@ -928,13 +928,35 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
   );
 }
 
+function WeatherImage({ src, alt, className }: { src: string, alt: string, className?: string }) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <div className={cn("relative flex items-center justify-center", className)}>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50 dark:bg-slate-800/50 animate-pulse rounded-lg">
+          <div className="w-1/2 h-1/2 border-2 border-blue-500/50 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={cn("transition-opacity duration-300", isLoading ? "opacity-0" : "opacity-100", className)}
+        onLoad={() => setIsLoading(false)}
+        onError={() => setIsLoading(false)}
+        referrerPolicy="no-referrer"
+      />
+    </div>
+  );
+}
+
 function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefresh: () => void }) {
   if (!state.weather) return <LoadingScreen />;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t.weather_alerts}</h2>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t.weather}</h2>
         <div className="flex items-center gap-2">
           <button 
             onClick={onRefresh}
@@ -972,11 +994,10 @@ function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefre
             <div className="text-4xl font-bold text-gray-800 dark:text-slate-100">{state.weather.temp.toFixed(0)}°C</div>
             <div className="text-sm text-gray-500 dark:text-slate-400 capitalize mt-1">{state.weather.description}</div>
           </div>
-          <img 
+          <WeatherImage 
             src={`https://openweathermap.org/img/wn/${state.weather.icon}@2x.png`} 
-            alt="Weather Icon" 
+            alt={`Current weather: ${state.weather.description}`} 
             className="w-20 h-20"
-            referrerPolicy="no-referrer"
           />
         </div>
 
@@ -987,19 +1008,42 @@ function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefre
         </div>
       </div>
 
+      {/* Hourly Forecast */}
+      {state.weather.hourly && state.weather.hourly.length > 0 && (
+        <div className="card-bg rounded-2xl p-6 shadow-sm space-y-4 transition-colors duration-300 overflow-hidden">
+          <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 border-b border-border pb-2">{t.hourly_forecast}</h3>
+          <div className="flex overflow-x-auto pb-2 gap-4 scrollbar-hide">
+            {state.weather.hourly.map((hour, i) => (
+              <div key={i} className="flex flex-col items-center min-w-[60px] space-y-2">
+                <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium">
+                  {new Date(hour.time).getHours()}:00
+                </span>
+                <WeatherImage 
+                  src={`https://openweathermap.org/img/wn/${hour.icon}.png`} 
+                  alt={hour.description} 
+                  className="w-8 h-8 rounded-full shadow-sm bg-blue-50/50 dark:bg-blue-900/10"
+                />
+                <span className="text-sm font-bold text-gray-800 dark:text-slate-100">{hour.temp.toFixed(0)}°</span>
+                <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold">{hour.rainProb}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Forecast */}
       {state.weather.forecast && state.weather.forecast.length > 0 && (
         <div className="card-bg rounded-2xl p-6 shadow-sm space-y-4 transition-colors duration-300">
-          <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 border-b border-border pb-2">{t.forecast_3day}</h3>
+          <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 border-b border-border pb-2">{t.weekly_forecast || t.forecast_7day}</h3>
           <div className="space-y-4">
             {state.weather.forecast.map((day, i) => (
               <div key={day.date} className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-slate-800 last:border-0">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center text-blue-600">
-                    <img 
+                    <WeatherImage 
                       src={`https://openweathermap.org/img/wn/${day.icon}.png`} 
-                      alt="Weather Icon" 
+                      alt={`Forecast for ${new Date(day.date).toLocaleDateString()}: ${day.description}`} 
                       className="w-8 h-8"
-                      referrerPolicy="no-referrer"
                     />
                   </div>
                   <div>
@@ -1025,9 +1069,9 @@ function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefre
         </div>
       )}
 
-      <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
-        <h4 className="font-bold text-blue-800 text-sm mb-2">Irrigation Advice</h4>
-        <p className="text-xs text-blue-700 leading-relaxed">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 p-4 rounded-xl">
+        <h4 className="font-bold text-blue-800 dark:text-blue-200 text-sm mb-2">Irrigation Advice</h4>
+        <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
           {state.weather.rain > 0 
             ? "Rain detected. Skip irrigation for today to save water." 
             : "No rain expected. Ensure regular watering for Rabi crops."}
@@ -1040,9 +1084,9 @@ function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefre
 function WeatherStat({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) {
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className="text-gray-400">{icon}</div>
-      <span className="text-[10px] text-gray-500 font-medium">{label}</span>
-      <span className="text-sm font-bold text-gray-800">{value}</span>
+      <div className="text-gray-400 dark:text-slate-500">{icon}</div>
+      <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium">{label}</span>
+      <span className="text-sm font-bold text-gray-800 dark:text-slate-100">{value}</span>
     </div>
   );
 }
