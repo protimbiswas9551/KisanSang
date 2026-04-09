@@ -37,10 +37,11 @@ import {
 } from 'lucide-react';
 import { AppState, Language, SoilData, WeatherData, MarketPrice } from './types';
 import { CROPS, DISEASES, TRANSLATIONS } from './constants';
-import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse, searchLocation } from './services';
+import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse, searchLocation, fetchMarketNews } from './services';
 import { cn } from './utils';
 import WeatherMap from './components/WeatherMap';
 import MarketView from './components/MarketView';
+import NewsSection from './components/NewsSection';
 
 export default function App() {
   const [state, setState] = useState<AppState>({
@@ -76,15 +77,17 @@ export default function App() {
   const handleLocationSelect = async (loc: { lat: number; lng: number; name: string }) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
-      const [soil, weather] = await Promise.all([
+      const [soil, weather, news] = await Promise.all([
         fetchSoilData(loc.lat, loc.lng),
-        fetchWeatherData(loc.lat, loc.lng)
+        fetchWeatherData(loc.lat, loc.lng),
+        fetchMarketNews()
       ]);
       setState(prev => ({
         ...prev,
         location: loc,
         soil,
         weather,
+        marketNews: news,
         loading: false,
         error: null
       }));
@@ -120,10 +123,11 @@ export default function App() {
         async (pos) => {
           try {
             const { latitude, longitude } = pos.coords;
-            const [soil, weather, locationName] = await Promise.all([
+            const [soil, weather, locationName, news] = await Promise.all([
               fetchSoilData(latitude, longitude),
               fetchWeatherData(latitude, longitude),
-              reverseGeocode(latitude, longitude)
+              reverseGeocode(latitude, longitude),
+              fetchMarketNews()
             ]);
 
             setState(prev => ({
@@ -131,6 +135,7 @@ export default function App() {
               location: { lat: latitude, lng: longitude, name: locationName },
               soil,
               weather,
+              marketNews: news,
               loading: false,
               error: null
             }));
@@ -310,16 +315,18 @@ export default function App() {
                 navigator.geolocation.getCurrentPosition(
                   async (pos) => {
                     const { latitude, longitude } = pos.coords;
-                    const [soil, weather, locationName] = await Promise.all([
+                    const [soil, weather, locationName, news] = await Promise.all([
                       fetchSoilData(latitude, longitude),
                       fetchWeatherData(latitude, longitude),
-                      reverseGeocode(latitude, longitude)
+                      reverseGeocode(latitude, longitude),
+                      fetchMarketNews()
                     ]);
                     setState(prev => ({
                       ...prev,
                       location: { lat: latitude, lng: longitude, name: locationName },
                       soil,
                       weather,
+                      marketNews: news,
                       loading: false,
                       error: null
                     }));
@@ -472,6 +479,8 @@ function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActi
           />
         </div>
       </section>
+
+      <NewsSection news={state.marketNews} t={t} />
     </div>
   );
 }

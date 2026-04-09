@@ -23,6 +23,7 @@ import { AppState, MarketPrice, Crop, Disease, MarketNews } from '../types';
 import { fetchMarketPrices, fetchMarketNews } from '../services';
 import { cn } from '../utils';
 import { CROPS, DISEASES } from '../constants';
+import NewsSection from './NewsSection';
 
 interface MarketViewProps {
   state: AppState;
@@ -197,45 +198,7 @@ export default function MarketView({ state, t, onDataUpdate, onNewsUpdate }: Mar
       </div>
 
       {/* News Section */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 text-indigo-600 mb-2">
-          <Newspaper size={20} />
-          <h2 className="font-bold text-gray-800 dark:text-slate-100">{t.latest_news}</h2>
-        </div>
-        <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide -mx-4 px-4">
-          {state.marketNews?.map((news, idx) => (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              key={news.id}
-              className="min-w-[280px] max-w-[280px] card-bg p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">{news.source}</span>
-                  <span className="text-[10px] text-gray-400">{news.date}</span>
-                </div>
-                <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 mb-2 line-clamp-2 leading-snug">
-                  {news.title}
-                </h3>
-                <p className="text-[11px] text-gray-500 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                  {news.summary}
-                </p>
-              </div>
-              <a 
-                href={news.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="mt-4 flex items-center gap-1 text-[11px] font-bold text-[#2D6A4F] hover:underline"
-              >
-                {t.read_more}
-                <ExternalLink size={12} />
-              </a>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      <NewsSection news={state.marketNews} t={t} />
 
       <AnimatePresence>
         {selectedPrice && (
