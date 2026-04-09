@@ -259,6 +259,68 @@ export const CROPS: Crop[] = [
     },
     rotationGroup: 'vegetable'
   },
+  {
+    id: 'chickpea',
+    name: { 
+      en: 'Chickpea (Gram)', hi: 'चना', bn: 'ছোলা', mr: 'हरभरा', te: 'శనగలు', ta: 'கொண்டைக்கடலை', gu: 'ચણા', kn: 'ಕಡಲೆ' 
+    },
+    minPh: 6.0,
+    maxPh: 7.5,
+    minTemp: 15,
+    maxTemp: 30,
+    waterRequirement: 'Low',
+    sowingMonths: [10, 11],
+    description: {
+      en: 'High-protein pulse crop that improves soil nitrogen.',
+      hi: 'उच्च प्रोटीन वाली दलहन फसल जो मिट्टी के नाइट्रोजन में सुधार करती है।',
+      bn: 'উচ্চ প্রোটিনযুক্ত ডাল জাতীয় ফসল যা মাটির নাইট্রোজেন উন্নত করে।',
+      mr: 'उच्च प्रथिने असलेले कडधान्य पीक जे मातीतील नायट्रोजन सुधारते.',
+      te: 'నేల నత్రజనిని మెరుగుపరిచే అధిక ప్రోటీన్ పప్పుధాన్యాల పంట.',
+      ta: 'மண் நைட்ரஜனை மேம்படுத்தும் அதிக புரதச்சத்து கொண்ட பருப்பு வகை பயிர்.',
+      gu: 'ઉચ્ચ પ્રોટીન ધરાવતો કઠોળ પાક જે જમીનમાં નાઇટ્રોજન સુધારે છે.',
+      kn: 'ಮಣ್ಣಿನ ಸಾರಜನಕವನ್ನು ಸುಧಾರಿಸುವ ಹೆಚ್ಚಿನ ಪ್ರೋಟೀನ್ ದ್ವಿದಳ ಧಾನ್ಯದ ಬೆಳೆ.'
+    },
+    soilType: { 
+      en: 'Sandy Loam to Clay Loam', hi: 'बलुई दोमट से चिकनी दोमट', bn: 'বেলে দোআঁশ থেকে এঁটেল দোআঁশ', mr: 'रेताड लोम ते चिकण लोम माती',
+      te: 'ఇసుక లోమ్ నుండి బంకమట్టి లోమ్ వరకు', ta: 'மணல் கலந்த வண்டல் முதல் களிமண் வண்டல் வரை', gu: 'રેતાળ ગોરાડુથી ચીકણી ગોરાડુ માટી', kn: 'ಮರಳು ಮಿಶ್ರಿತ ಲೋಮ್‌ನಿಂದ ಜಿಗುಟು ಲೋಮ್‌ವರೆಗೆ'
+    },
+    yieldPotential: { 
+      en: '1.5 - 2.5 tons/hectare', hi: '1.5 - 2.5 टन/हेक्टेयर', bn: '১.৫ - ২.৫ টন/হেক্টর', mr: '१.५ - २.५ टन/हेक्टर',
+      te: '1.5 - 2.5 టన్నులు/హెక్టారు', ta: '1.5 - 2.5 டன்/ஹெக்டேர்', gu: '1.5 - 2.5 ટન/હેક્ટર', kn: '1.5 - 2.5 ಟನ್/ಹೆಕ್ಟೇರ್'
+    },
+    rotationGroup: 'pulse'
+  },
+  {
+    id: 'soybean',
+    name: { 
+      en: 'Soybean', hi: 'सोयाबीन', bn: 'সয়াবিন', mr: 'सोयाबीन', te: 'సోయాబీన్', ta: 'சோயாபீன்', gu: 'સોયાબીન', kn: 'ಸೋಯಾಬೀನ್' 
+    },
+    minPh: 6.0,
+    maxPh: 7.0,
+    minTemp: 20,
+    maxTemp: 35,
+    waterRequirement: 'Medium',
+    sowingMonths: [6, 7],
+    description: {
+      en: 'Major oilseed and protein source, excellent for rotation.',
+      hi: 'प्रमुख तिलहन और प्रोटीन स्रोत, फसल चक्र के लिए उत्कृष्ट।',
+      bn: 'প্রধান তৈলবীজ এবং প্রোটিন উৎস, ফসল চক্রের জন্য চমৎকার।',
+      mr: 'प्रमुख तेलबिया आणि प्रೋಟिन स्रोत, पीक फेरपालटासाठी उत्कृष्ट.',
+      te: 'ప్రధాన నూనెగింజలు మరియు ప్రోటీన్ వనరు, పంట మార్పిడికి అద్భుతమైనది.',
+      ta: 'முக்கிய எண்ணெய் வித்து மற்றும் புரத ஆதாரம், பயிர் சுழற்சிக்கு சிறந்தது.',
+      gu: 'મુખ્ય તેલીબિયાં અને પ્રોટીન સ્ત્રોત, પાક ફેરબદલી માટે ઉત્તમ.',
+      kn: 'ಪ್ರಮುಖ ಎಣ್ಣೆಕಾಳು ಮತ್ತು ಪ್ರೋಟೀನ್ ಮೂಲ, ಬೆಳೆ ಸರದಿಗೆ ಅತ್ಯುತ್ತಮವಾಗಿದೆ.'
+    },
+    soilType: { 
+      en: 'Well-drained Loam', hi: 'अच्छी जल निकासी वाली दोमट', bn: 'সুনিষ্কাশಿತ দোআঁশ', mr: 'पाण्याचा निचरा होणारी लोम माती',
+      te: 'మంచి నీటి పారుదల గల లోమ్', ta: 'நல்ல வடிகால் வசதியுள்ள வண்டல் மண்', gu: 'સારી નિકાલવાળી ગોરાડુ માટી', kn: 'ಉತ್ತಮ ನೀರು ಹರಿಯುವ ಲೋಮ್'
+    },
+    yieldPotential: { 
+      en: '2.0 - 3.0 tons/hectare', hi: '2.0 - 3.0 टन/हेक्टेयर', bn: '২.০ - ৩.০ টন/হেক্টর', mr: '२.० - ३.० टन/हेक्टर',
+      te: '2.0 - 3.0 టన్నులు/హెక్టారు', ta: '2.0 - 3.0 டன்/ஹெக்டேர்', gu: '2.0 - 3.0 ટન/હેક્ટર', kn: '2.0 - 3.0 ಟನ್/ಹೆಕ್ಟೇರ್'
+    },
+    rotationGroup: 'legume'
+  },
 ];
 
 export const TRANSLATIONS: TranslationMap = {
@@ -316,9 +378,13 @@ export const TRANSLATIONS: TranslationMap = {
     rotation_importance_desc: 'Rotating crops prevents soil exhaustion, breaks pest cycles, and naturally improves soil health by balancing nutrient demand.',
     learn_more: 'View Detailed Guide',
     no_previous_data: 'Select your previous crop to get personalized rotation advice.',
+    rotation_reason: 'Rotating crops helps break pest cycles and maintains soil health.',
     cereal_benefit: 'Cereals like wheat and rice provide high yields and stable income.',
     legume_benefit: 'Legumes fix nitrogen in the soil, reducing the need for chemical fertilizers.',
-    rotation_reason: 'Based on your previous crop, this rotation will maximize soil health.',
+    vegetable_benefit: 'Vegetables help in intensive land use and provide quick returns.',
+    oilseed_benefit: 'Oilseeds can improve soil structure and provide high-value products.',
+    millet_benefit: 'Millets are hardy crops that require less water and improve soil resilience.',
+    pulse_benefit: 'Pulses improve soil fertility through nitrogen fixation and are protein-rich.',
     rotation_advice_title: 'Crop Rotation Advisor',
     crop_rotation: 'Crop Rotation Advisor',
     select_previous_crop: 'Select Previous Crop',
@@ -420,7 +486,11 @@ export const TRANSLATIONS: TranslationMap = {
     no_previous_data: 'व्यक्तिगत फसल चक्र सलाह प्राप्त करने के लिए अपनी पिछली फसल चुनें।',
     cereal_benefit: 'गेहूं और चावल जैसे अनाज उच्च उपज और स्थिर आय प्रदान करते हैं।',
     legume_benefit: 'दलहन मिट्टी में नाइट्रोजन को स्थिर करते हैं, जिससे रासायनिक उर्वरकों की आवश्यकता कम हो जाती है।',
-    rotation_reason: 'आपकी पिछली फसल के आधार पर, यह चक्र मिट्टी के स्वास्थ्य को अधिकतम करेगा।',
+    rotation_reason: 'फसल चक्र कीट चक्र को तोड़ने और मिट्टी के स्वास्थ्य को बनाए रखने में मदद करता है।',
+    vegetable_benefit: 'सब्जियां गहन भूमि उपयोग में मदद करती हैं और त्वरित लाभ प्रदान करती हैं।',
+    oilseed_benefit: 'तिलहन मिट्टी की संरचना में सुधार कर सकते हैं और उच्च मूल्य वाले उत्पाद प्रदान करते हैं।',
+    millet_benefit: 'बाजरा कठोर फसलें हैं जिन्हें कम पानी की आवश्यकता होती है और मिट्टी के लचीलेपन में सुधार करती हैं।',
+    pulse_benefit: 'दलहन नाइट्रोजन स्थिरीकरण के माध्यम से मिट्टी की उर्वरता में सुधार करते हैं और प्रोटीन से भरपूर होते हैं।',
     rotation_advice_title: 'फसल चक्र सलाहकार',
     crop_rotation: 'फसल चक्र सलाहकार',
     select_previous_crop: 'पिछली फसल चुनें',

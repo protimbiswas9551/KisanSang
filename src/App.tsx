@@ -697,15 +697,16 @@ function RotationFlowchart({ previousCrop, nextCrop, language }: { previousCrop:
       case 'legume':
       case 'pulse': return <Droplets size={16} />;
       case 'vegetable': return <Sprout size={16} />;
-      case 'oilseed': return <Droplets size={16} />;
-      case 'fruit': return <Sprout size={16} />;
+      case 'oilseed': return <Sparkles size={16} />;
+      case 'millet': return <Database size={16} />;
       default: return <Sprout size={16} />;
     }
   };
 
   const getThirdCrop = (group: string) => {
     if (group === 'legume' || group === 'pulse') return CROPS.find(c => c.rotationGroup === 'oilseed') || CROPS.find(c => c.rotationGroup === 'cereal');
-    if (group === 'cereal') return CROPS.find(c => c.rotationGroup === 'vegetable') || CROPS.find(c => c.rotationGroup === 'legume' || c.rotationGroup === 'pulse');
+    if (group === 'cereal' || group === 'millet') return CROPS.find(c => c.rotationGroup === 'vegetable') || CROPS.find(c => c.rotationGroup === 'legume' || c.rotationGroup === 'pulse');
+    if (group === 'vegetable') return CROPS.find(c => c.rotationGroup === 'legume' || c.rotationGroup === 'pulse') || CROPS.find(c => c.rotationGroup === 'cereal');
     return CROPS.find(c => c.rotationGroup === 'legume' || c.rotationGroup === 'pulse') || CROPS.find(c => c.rotationGroup === 'cereal');
   };
 
@@ -922,16 +923,28 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
     const isLegume = (group: string) => group === 'legume' || group === 'pulse';
 
     if (previousCrop.rotationGroup === 'cereal' || previousCrop.rotationGroup === 'millet') {
-      suggested = CROPS.find(c => isLegume(c.rotationGroup)) || CROPS.find(c => c.rotationGroup === 'oilseed');
+      // After cereals/millets, plant legumes to fix nitrogen
+      suggested = CROPS.find(c => isLegume(c.rotationGroup) && c.id !== previousCrop.id) || 
+                  CROPS.find(c => c.rotationGroup === 'oilseed' && c.id !== previousCrop.id);
       benefit = t.legume_benefit;
     } else if (isLegume(previousCrop.rotationGroup)) {
-      suggested = CROPS.find(c => c.rotationGroup === 'cereal') || CROPS.find(c => c.rotationGroup === 'millet');
+      // After legumes, plant cereals to use the nitrogen
+      suggested = CROPS.find(c => c.rotationGroup === 'cereal' && c.id !== previousCrop.id) || 
+                  CROPS.find(c => c.rotationGroup === 'millet' && c.id !== previousCrop.id);
       benefit = t.cereal_benefit;
     } else if (previousCrop.rotationGroup === 'vegetable') {
-      suggested = CROPS.find(c => isLegume(c.rotationGroup)) || CROPS.find(c => c.rotationGroup === 'cereal');
-      benefit = t.legume_benefit;
+      // After vegetables, plant pulses or cereals to break pest cycles
+      suggested = CROPS.find(c => c.rotationGroup === 'pulse' && c.id !== previousCrop.id) || 
+                  CROPS.find(c => c.rotationGroup === 'cereal' && c.id !== previousCrop.id);
+      benefit = t.pulse_benefit;
+    } else if (previousCrop.rotationGroup === 'oilseed') {
+      // After oilseeds, plant cereals or vegetables
+      suggested = CROPS.find(c => c.rotationGroup === 'cereal' && c.id !== previousCrop.id) || 
+                  CROPS.find(c => c.rotationGroup === 'vegetable' && c.id !== previousCrop.id);
+      benefit = t.cereal_benefit;
     } else {
-      suggested = CROPS.find(c => isLegume(c.rotationGroup)) || CROPS.find(c => c.rotationGroup === 'cereal');
+      suggested = CROPS.find(c => isLegume(c.rotationGroup) && c.id !== previousCrop.id) || 
+                  CROPS.find(c => c.rotationGroup === 'cereal' && c.id !== previousCrop.id);
       benefit = t.legume_benefit;
     }
 
