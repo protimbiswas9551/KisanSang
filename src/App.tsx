@@ -34,8 +34,10 @@ import {
   Filter,
   Check,
   TrendingUp,
+  Plus,
+  Calendar,
 } from 'lucide-react';
-import { AppState, Language, SoilData, WeatherData, MarketPrice } from './types';
+import { AppState, Language, SoilData, WeatherData, MarketPrice, Crop } from './types';
 import { CROPS, DISEASES, TRANSLATIONS } from './constants';
 import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse, searchLocation, fetchMarketNews } from './services';
 import { cn } from './utils';
@@ -701,6 +703,104 @@ const calculateCropScore = (crop: any, soil: SoilData | null, weather: WeatherDa
   
   return Math.min(Math.max(score, 40), 100);
 };
+
+function CropCompareModal({ crops, onClose, state, t }: { crops: Crop[], onClose: () => void, state: AppState, t: any }) {
+  const getMonthName = (month: number) => {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-6 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-[#2D6A4F] to-[#1B4332] text-white">
+          <div>
+            <h3 className="text-xl font-bold">{t.compare_crops}</h3>
+            <p className="text-xs opacity-80">{t.select_up_to_2}</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-2 gap-6 relative">
+            {/* Divider */}
+            <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-gray-100 dark:bg-slate-800 hidden sm:block"></div>
+
+            {crops.map((crop, idx) => {
+              const score = calculateCropScore(crop, state.soil, state.weather);
+              return (
+                <div key={crop.id} className="space-y-6">
+                  <div className="flex flex-col items-center text-center space-y-3">
+                    <div className="w-16 h-16 bg-green-50 dark:bg-green-900/20 rounded-2xl flex items-center justify-center text-[#2D6A4F] border border-green-100 dark:border-green-800/30">
+                      <Sprout size={32} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg text-gray-800 dark:text-slate-100">
+                        {crop.name[state.language] || crop.name.en}
+                      </h4>
+                      <div className="flex items-center justify-center gap-2 mt-1">
+                        <div className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-[10px] font-bold">
+                          {score}% Match
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <CompareItem label={t.soil_type} value={crop.soilType[state.language] || crop.soilType.en} icon={<Database size={14} />} />
+                    <CompareItem label={t.ph_range} value={`${crop.minPh} - ${crop.maxPh}`} icon={<Droplets size={14} />} />
+                    <CompareItem label={t.temp_range} value={`${crop.minTemp}°C - ${crop.maxTemp}°C`} icon={<Thermometer size={14} />} />
+                    <CompareItem label={t.water_needs} value={crop.waterRequirement} icon={<Droplets size={14} />} />
+                    <CompareItem label={t.sowing_time} value={crop.sowingMonths.map(getMonthName).join(', ')} icon={<Calendar size={14} />} />
+                    <CompareItem label={t.yield_potential} value={crop.yieldPotential[state.language] || crop.yieldPotential.en} icon={<Award size={14} />} />
+                  </div>
+                </div>
+              );
+            })}
+
+            {crops.length < 2 && (
+              <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-gray-100 dark:border-slate-800 rounded-2xl space-y-3 opacity-50">
+                <div className="w-12 h-12 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-gray-400">
+                  <Plus size={24} />
+                </div>
+                <p className="text-xs text-gray-400">Select another crop to compare</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function CompareItem({ label, value, icon }: { label: string, value: string, icon: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+        {icon}
+        {label}
+      </div>
+      <p className="text-xs font-bold text-gray-800 dark:text-slate-100 leading-snug">{value}</p>
+    </div>
+  );
+}
 
 function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any, onPreviousCropChange: (id: string) => void }) {
   const [expandedCropId, setExpandedCropId] = useState<string | null>(null);
@@ -1917,102 +2017,6 @@ function LanguageSelector({ currentLanguage, onLanguageChange }: { currentLangua
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-function CropCompareModal({ crops, onClose, state, t }: { crops: any[], onClose: () => void, state: AppState, t: any }) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="card-bg w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="p-6 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-xl flex items-center justify-center text-[#2D6A4F]">
-              <Scale size={20} />
-            </div>
-            <h3 className="font-bold text-lg text-gray-800 dark:text-slate-100">Crop Comparison</h3>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-900 rounded-full transition-colors">
-            <X size={20} className="text-gray-400" />
-          </button>
-        </div>
-
-        <div className="p-6 overflow-y-auto max-h-[70vh]">
-          {crops.length < 2 ? (
-            <div className="py-10 text-center space-y-4">
-              <div className="w-16 h-16 bg-gray-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto text-gray-300 border border-transparent dark:border-slate-800">
-                <Scale size={32} />
-              </div>
-              <p className="text-sm text-gray-500">Please select two crops to compare their details side-by-side.</p>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              <div className="grid grid-cols-2 gap-4">
-                {crops.map(crop => (
-                  <div key={crop.id} className="text-center">
-                    <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto text-[#2D6A4F] mb-2">
-                      <Sprout size={24} />
-                    </div>
-                    <h4 className="font-bold text-gray-800 dark:text-slate-100">{crop.name[state.language] || crop.name.en}</h4>
-                    <span className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider">{crop.rotationGroup}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-4">
-                <CompareItem label="Ideal Soil" values={crops.map(c => c.soilType[state.language] || c.soilType.en)} />
-                <CompareItem label="pH Range" values={crops.map(c => `${c.minPh} - ${c.maxPh}`)} />
-                <CompareItem label="Temp Range" values={crops.map(c => `${c.minTemp}°C - ${c.maxTemp}°C`)} />
-                <CompareItem label="Water Need" values={crops.map(c => c.waterRequirement)} />
-                <CompareItem label="Sowing Time" values={crops.map(c => c.sowingMonths.map((m: number) => {
-                  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                  return months[m-1];
-                }).join(', '))} />
-                <CompareItem label="Yield Potential" values={crops.map(c => {
-                  const score = calculateCropScore(c, state.soil!, state.weather!);
-                  return `${score}% Match`;
-                })} />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="p-6 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-100 dark:border-slate-800">
-          <button 
-            onClick={onClose}
-            className="w-full py-3 bg-[#2D6A4F] text-white rounded-xl font-bold shadow-lg shadow-green-900/20 active:scale-[0.98] transition-all"
-          >
-            Got it
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function CompareItem({ label, values }: { label: string, values: string[] }) {
-  return (
-    <div className="space-y-2">
-      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block text-center">{label}</span>
-      <div className="grid grid-cols-2 gap-4">
-        {values.map((v, i) => (
-          <div key={i} className="bg-gray-50 dark:bg-slate-900 p-3 rounded-xl text-center border border-transparent dark:border-slate-800">
-            <span className="text-xs font-bold text-gray-700 dark:text-slate-200">{v}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

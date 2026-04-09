@@ -51,6 +51,10 @@ export const CROPS: Crop[] = [
       en: 'Well-drained Loam', hi: 'अच्छी जल निकासी वाली दोमट', bn: 'সুনিষ্কাশিত দোআঁশ', mr: 'पाण्याचा निचरा होणारी लोम माती',
       te: 'మంచి నీటి పారుదల గల లోమ్', ta: 'நல்ல வடிகால் வசதியுள்ள வண்டல் மண்', gu: 'સારી નિકાલવાળી ગોરાડુ માટી', kn: 'ಉತ್ತಮ ನೀರು ಹರಿಯುವ ಲೋಮ್'
     },
+    yieldPotential: { 
+      en: '3.5 - 4.5 tons/hectare', hi: '3.5 - 4.5 टन/हेक्टेयर', bn: '৩.৫ - ৪.৫ টন/হেক্টর', mr: '३.५ - ४.५ टन/हेक्टर',
+      te: '3.5 - 4.5 టన్నులు/హెక్టారు', ta: '3.5 - 4.5 டன்/ஹெக்டேர்', gu: '3.5 - 4.5 ટન/હેક્ટર', kn: '3.5 - 4.5 ಟನ್/ಹೆಕ್ಟೇರ್'
+    },
     rotationGroup: 'cereal'
   },
   {
@@ -77,6 +81,10 @@ export const CROPS: Crop[] = [
     soilType: { 
       en: 'Clayey Loam', hi: 'चिकनी दोमट', bn: 'এঁটেল দোআঁশ', mr: 'चिकण लोम माती',
       te: 'బంకమట్టి లోమ్', ta: 'களிமண் வண்டல்', gu: 'ચીકણી ગોરાડુ માટી', kn: 'ಜಿಗುಟು ಲೋಮ್'
+    },
+    yieldPotential: { 
+      en: '4.0 - 6.0 tons/hectare', hi: '4.0 - 6.0 टन/हेक्टेयर', bn: '৪.০ - ৬.০ টন/হেক্টর', mr: '४.० - ६.० टन/हेक्टर',
+      te: '4.0 - 6.0 టన్నులు/హెక్టారు', ta: '4.0 - 6.0 டன்/ஹெக்டேர்', gu: '4.0 - 6.0 ટન/હેક્ટર', kn: '4.0 - 6.0 ಟನ್/ಹೆಕ್ಟೇರ್'
     },
     rotationGroup: 'cereal'
   },
@@ -105,6 +113,10 @@ export const CROPS: Crop[] = [
       en: 'Deep Loam', hi: 'गहरी दोमट', bn: 'গভীর দোআঁশ', mr: 'खोल लोम माती',
       te: 'లోతైన లోమ్', ta: 'ஆழமான வண்டல் மண்', gu: 'ઊંડી ગોરાડુ માટી', kn: 'ಆಳವಾದ ಲೋಮ್'
     },
+    yieldPotential: { 
+      en: '5.0 - 8.0 tons/hectare', hi: '5.0 - 8.0 टन/हेक्टेयर', bn: '৫.০ - ৮.০ টন/হেক্টর', mr: '५.० - ८.० टन/हेक्टर',
+      te: '5.0 - 8.0 టన్నులు/హెక్టారు', ta: '5.0 - 8.0 டன்/ஹெக்டேர்', gu: '5.0 - 8.0 ટન/હેક્ટર', kn: '5.0 - 8.0 ಟನ್/ಹೆಕ್ಟೇರ್'
+    },
     rotationGroup: 'cereal'
   },
   {
@@ -132,6 +144,10 @@ export const CROPS: Crop[] = [
       en: 'Sandy Loam', hi: 'बलुई दोमट', bn: 'বেলে দোআঁশ', mr: 'रेताड लोम माती',
       te: 'ఇసుక లోమ్', ta: 'மணல் கலந்த வண்டல் மண்', gu: 'રેતાળ ગોરાડુ માટી', kn: 'ಮರಳು ಮಿಶ್ರಿತ ಲೋಮ್'
     },
+    yieldPotential: { 
+      en: '1.5 - 2.5 tons/hectare', hi: '1.5 - 2.5 टन/हेक्टेयर', bn: '১.৫ - ২.৫ টন/হেক্টর', mr: '१.५ - २.५ टन/हेक्टर',
+      te: '1.5 - 2.5 టన్నులు/హెక్టారు', ta: '1.5 - 2.5 டன்/ஹெக்டேர்', gu: '1.5 - 2.5 ટન/હેક્ટર', kn: '1.5 - 2.5 ಟನ್/ಹೆಕ್ಟೇರ್'
+    },
     rotationGroup: 'oilseed'
   },
   {
@@ -158,6 +174,10 @@ export const CROPS: Crop[] = [
     soilType: { 
       en: 'Well-drained Loam', hi: 'अच्छी जल निकासी वाली दोमट', bn: 'সুনিষ্কাশিত দোআঁশ', mr: 'पाण्याचा निचरा होणारी लोम माती',
       te: 'మంచి నీటి పారుదల గల లోమ్', ta: 'நல்ல வடிகால் வசதியுள்ள வண்டல் மண்', gu: 'સારી નિકાલવાળી ગોરાડુ માટી', kn: 'ಉತ್ತಮ ನೀರು ಹರಿಯುವ ಲೋಮ್'
+    },
+    yieldPotential: { 
+      en: '20 - 30 tons/hectare', hi: '20 - 30 टन/हेक्टेयर', bn: '২০ - ৩০ টন/হেক্টর', mr: '२० - ३० टन/हेक्टर',
+      te: '20 - 30 టన్నులు/హెక్టారు', ta: '20 - 30 டன்/ஹெக்டேர்', gu: '20 - 30 ટન/હેક્ટર', kn: '20 - 30 ಟನ್/ಹೆಕ್ಟೇರ್'
     },
     rotationGroup: 'vegetable'
   },
@@ -246,6 +266,14 @@ export const TRANSLATIONS: TranslationMap = {
     search_commodity: 'Search commodity...',
     latest_news: 'Latest Agricultural News',
     read_more: 'Read More',
+    compare_crops: 'Compare Crops',
+    select_up_to_2: 'Select up to 2 crops to compare',
+    yield_potential: 'Yield Potential',
+    soil_type: 'Soil Type',
+    ph_range: 'pH Range',
+    temp_range: 'Temperature Range',
+    water_needs: 'Water Needs',
+    sowing_time: 'Sowing Time',
   },
   hi: {
     language_name: 'हिंदी',
@@ -321,6 +349,14 @@ export const TRANSLATIONS: TranslationMap = {
     use_current_location: 'वर्तमान स्थान का उपयोग करें',
     latest_news: 'नवीनतम कृषि समाचार',
     read_more: 'अधिक पढ़ें',
+    compare_crops: 'फसलों की तुलना करें',
+    select_up_to_2: 'तुलना करने के लिए अधिकतम 2 फसलें चुनें',
+    yield_potential: 'उपज क्षमता',
+    soil_type: 'मिट्टी का प्रकार',
+    ph_range: 'pH रेंज',
+    temp_range: 'तापमान रेंज',
+    water_needs: 'पानी की आवश्यकता',
+    sowing_time: 'बुवाई का समय',
   },
   bn: {
     language_name: 'বাংলা',
@@ -396,6 +432,14 @@ export const TRANSLATIONS: TranslationMap = {
     use_current_location: 'বর্তমান অবস্থান ব্যবহার করুন',
     latest_news: 'সর্বশেষ কৃষি সংবাদ',
     read_more: 'আরও পড়ুন',
+    compare_crops: 'ফসলের তুলনা করুন',
+    select_up_to_2: 'তুলনা করতে সর্বোচ্চ ২টি ফসল নির্বাচন করুন',
+    yield_potential: 'ফলন সম্ভাবনা',
+    soil_type: 'মাটির ধরন',
+    ph_range: 'pH পরিসীমা',
+    temp_range: 'তাপমাত্রা পরিসীমা',
+    water_needs: 'জলের প্রয়োজন',
+    sowing_time: 'বপনের সময়',
   },
   mr: {
     language_name: 'मराठी',
@@ -471,6 +515,14 @@ export const TRANSLATIONS: TranslationMap = {
     use_current_location: 'वर्तमान स्थान वापरा',
     latest_news: 'नवीनतम कृषी बातम्या',
     read_more: 'अधिक वाचा',
+    compare_crops: 'पिकांची तुलना करा',
+    select_up_to_2: 'तुलना करण्यासाठी जास्तीत जास्त २ पिके निवडा',
+    yield_potential: 'उत्पादन क्षमता',
+    soil_type: 'मातीचा प्रकार',
+    ph_range: 'pH श्रेणी',
+    temp_range: 'तापमान श्रेणी',
+    water_needs: 'पाण्याची गरज',
+    sowing_time: 'पेरणीची वेळ',
   },
   te: {
     language_name: 'తెలుగు',
@@ -546,6 +598,14 @@ export const TRANSLATIONS: TranslationMap = {
     use_current_location: 'ప్రస్తుత స్థానాన్ని ఉపయోగించండి',
     latest_news: 'తాజా వ్యవసాయ వార్తలు',
     read_more: 'మరింత చదవండి',
+    compare_crops: 'పంటల పోలిక',
+    select_up_to_2: 'పోల్చడానికి గరిష్టంగా 2 పంటలను ఎంచుకోండి',
+    yield_potential: 'దిగుబడి సామర్థ్యం',
+    soil_type: 'నేల రకం',
+    ph_range: 'pH పరిధి',
+    temp_range: 'ఉష్ణోగ్రత పరిధి',
+    water_needs: 'నీటి అవసరాలు',
+    sowing_time: 'విత్తే సమయం',
   },
   ta: {
     language_name: 'தமிழ்',
@@ -621,6 +681,14 @@ export const TRANSLATIONS: TranslationMap = {
     use_current_location: 'தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்',
     latest_news: 'சமீபத்திய விவசாய செய்திகள்',
     read_more: 'மேலும் படிக்க',
+    compare_crops: 'பயிர்களை ஒப்பிடுக',
+    select_up_to_2: 'ஒப்பிட அதிகபட்சம் 2 பயிர்களைத் தேர்ந்தெடுக்கவும்',
+    yield_potential: 'மகசூல் திறன்',
+    soil_type: 'மண் வகை',
+    ph_range: 'pH வரம்பு',
+    temp_range: 'வெப்பநிலை வரம்பு',
+    water_needs: 'நீர் தேவைகள்',
+    sowing_time: 'விதைப்பு நேரம்',
   },
   gu: {
     language_name: 'ગુજરાતી',
@@ -704,6 +772,14 @@ export const TRANSLATIONS: TranslationMap = {
     search_commodity: 'વસ્તુ શોધો...',
     latest_news: 'નવીનતમ કૃષિ સમાચાર',
     read_more: 'વધુ વાંચો',
+    compare_crops: 'પાકની સરખામણી કરો',
+    select_up_to_2: 'સરખામણી કરવા માટે વધુમાં વધુ ૨ પાક પસંદ કરો',
+    yield_potential: 'ઉત્પાદન ક્ષમતા',
+    soil_type: 'માટીનો પ્રકાર',
+    ph_range: 'pH રેન્જ',
+    temp_range: 'તાપમાન રેન્જ',
+    water_needs: 'પાણીની જરૂરિયાત',
+    sowing_time: 'વાવણીનો સમય',
   },
   kn: {
     language_name: 'ಕನ್ನಡ',
@@ -787,5 +863,13 @@ export const TRANSLATIONS: TranslationMap = {
     search_commodity: 'ವಸ್ತುವನ್ನು ಹುಡುಕಿ...',
     latest_news: 'ಇತ್ತೀಚಿನ ಕೃಷಿ ಸುದ್ದಿ',
     read_more: 'ಮತ್ತಷ್ಟು ಓದಿ',
+    compare_crops: 'ಬೆಳೆಗಳ ಹೋಲಿಕೆ',
+    select_up_to_2: 'ಹೋಲಿಸಲು ಗರಿಷ್ಠ 2 ಬೆಳೆಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ',
+    yield_potential: 'ಇಳುವರಿ ಸಾಮರ್ಥ್ಯ',
+    soil_type: 'ಮಣ್ಣಿನ ವಿಧ',
+    ph_range: 'pH ಶ್ರೇಣಿ',
+    temp_range: 'ತಾಪಮಾನ ಶ್ರೇಣಿ',
+    water_needs: 'ನೀರಿನ ಅವಶ್ಯಕತೆ',
+    sowing_time: 'ಬಿತ್ತನೆ ಸಮಯ',
   },
 };
