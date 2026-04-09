@@ -105,6 +105,14 @@ export interface ExpertTip {
   icon: string;
 }
 
+export interface PriceAlert {
+  id: string;
+  commodity: string;
+  threshold: number;
+  condition: 'above' | 'below';
+  isActive: boolean;
+}
+
 export interface AppState {
   language: Language;
   location: { lat: number; lng: number; name: string } | null;
@@ -117,4 +125,5 @@ export interface AppState {
   theme?: 'light' | 'dark';
   marketData?: MarketPrice[] | null;
   marketNews?: MarketNews[] | null;
+  priceAlerts: PriceAlert[];
 }

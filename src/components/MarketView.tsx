@@ -19,7 +19,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
-import { AppState, MarketPrice, Crop, Disease, MarketNews } from '../types';
+import { AppState, MarketPrice, Crop, Disease, MarketNews, PriceAlert } from '../types';
 import { fetchMarketPrices, fetchMarketNews } from '../services';
 import { cn } from '../utils';
 import { CROPS, DISEASES } from '../constants';
@@ -30,9 +30,11 @@ interface MarketViewProps {
   t: any;
   onDataUpdate: (data: MarketPrice[]) => void;
   onNewsUpdate: (news: MarketNews[]) => void;
+  onAddAlert: (alert: Omit<PriceAlert, 'id' | 'isActive'>) => void;
+  onRemoveAlert: (id: string) => void;
 }
 
-export default function MarketView({ state, t, onDataUpdate, onNewsUpdate }: MarketViewProps) {
+export default function MarketView({ state, t, onDataUpdate, onNewsUpdate, onAddAlert, onRemoveAlert }: MarketViewProps) {
   const [loading, setLoading] = useState(!state.marketData || !state.marketNews);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -200,6 +202,62 @@ export default function MarketView({ state, t, onDataUpdate, onNewsUpdate }: Mar
       {/* News Section */}
       <NewsSection news={state.marketNews} t={t} />
 
+      {/* Price Alerts Section */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-amber-500">
+            <AlertCircle size={20} />
+            <h2 className="font-bold text-gray-800 dark:text-slate-100">{t.price_alerts}</h2>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          {state.priceAlerts.length > 0 ? (
+            state.priceAlerts.map(alert => {
+              const currentPrice = state.marketData?.find(p => p.commodity === alert.commodity)?.modalPrice;
+              const isTriggered = currentPrice && (alert.condition === 'above' ? currentPrice >= alert.threshold : currentPrice <= alert.threshold);
+              
+              return (
+                <div key={alert.id} className={cn(
+                  "card-bg p-4 rounded-2xl border flex items-center justify-between shadow-sm",
+                  isTriggered ? "border-amber-500 bg-amber-50/50 dark:bg-amber-900/10" : "border-gray-100 dark:border-slate-800"
+                )}>
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center",
+                      isTriggered ? "bg-amber-500 text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-400"
+                    )}>
+                      <TrendingUp size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-800 dark:text-slate-100">{alert.commodity}</h4>
+                      <p className="text-[10px] text-gray-500 dark:text-slate-400">
+                        {t.notify_me} {alert.condition === 'above' ? t.above : t.below} ₹{alert.threshold}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {isTriggered && (
+                      <span className="text-[10px] font-bold text-amber-600 animate-pulse">TRIGGERED</span>
+                    )}
+                    <button 
+                      onClick={() => onRemoveAlert(alert.id)}
+                      className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-8 card-bg rounded-2xl border border-dashed border-gray-200 dark:border-slate-800 opacity-60">
+              <p className="text-xs text-gray-400">{t.no_alerts}</p>
+            </div>
+          )}
+        </div>
+      </section>
+
       <AnimatePresence>
         {selectedPrice && (
           <MarketDetailModal 
@@ -207,6 +265,7 @@ export default function MarketView({ state, t, onDataUpdate, onNewsUpdate }: Mar
             t={t} 
             language={state.language}
             onClose={() => setSelectedPrice(null)} 
+            onAddAlert={onAddAlert}
           />
         )}
       </AnimatePresence>
@@ -219,9 +278,13 @@ interface MarketDetailModalProps {
   t: any;
   language: string;
   onClose: () => void;
+  onAddAlert: (alert: Omit<PriceAlert, 'id' | 'isActive'>) => void;
 }
 
-function MarketDetailModal({ price, t, language, onClose }: MarketDetailModalProps) {
+function MarketDetailModal({ price, t, language, onClose, onAddAlert }: MarketDetailModalProps) {
+  const [alertThreshold, setAlertThreshold] = useState(price.modalPrice.toString());
+  const [alertCondition, setAlertCondition] = useState<'above' | 'below'>('above');
+  const [showAddAlert, setShowAddAlert] = useState(false);
   const crop = CROPS.find(c => 
     Object.values(c.name).some(name => name.toLowerCase() === price.commodity.toLowerCase()) ||
     price.commodity.toLowerCase().includes(c.id.toLowerCase())
@@ -268,12 +331,65 @@ function MarketDetailModal({ price, t, language, onClose }: MarketDetailModalPro
               <div className="text-2xl font-bold text-[#2D6A4F]">₹{price.modalPrice}</div>
               <span className="text-[10px] text-gray-500">per {price.unit}</span>
             </div>
-            <div className="card-bg p-4 rounded-2xl border border-gray-100 dark:border-slate-800">
-              <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block mb-1">{t.price_range}</span>
-              <div className="text-sm font-bold text-gray-700 dark:text-slate-300">₹{price.minPrice} - ₹{price.maxPrice}</div>
-              <span className="text-[10px] text-gray-500">{price.arrivalDate}</span>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => setShowAddAlert(!showAddAlert)}
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 shadow-lg shadow-amber-500/20"
+              >
+                <AlertCircle size={20} />
+                <span className="text-[10px] font-bold uppercase">{t.set_alert}</span>
+              </button>
             </div>
           </div>
+
+          <AnimatePresence>
+            {showAddAlert && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="card-bg p-4 rounded-2xl border border-amber-200 dark:border-amber-900/30 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase">{t.alert_threshold}</label>
+                      <input 
+                        type="number" 
+                        value={alertThreshold}
+                        onChange={(e) => setAlertThreshold(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase">{t.alert_condition}</label>
+                      <select 
+                        value={alertCondition}
+                        onChange={(e) => setAlertCondition(e.target.value as 'above' | 'below')}
+                        className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                      >
+                        <option value="above">{t.above}</option>
+                        <option value="below">{t.below}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      onAddAlert({
+                        commodity: price.commodity,
+                        threshold: parseFloat(alertThreshold),
+                        condition: alertCondition
+                      });
+                      setShowAddAlert(false);
+                    }}
+                    className="w-full py-2 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all"
+                  >
+                    {t.save}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {crop ? (
             <>

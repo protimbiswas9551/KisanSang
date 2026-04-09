@@ -40,7 +40,7 @@ import {
   Sparkles,
   Bug as BugIcon,
 } from 'lucide-react';
-import { AppState, Language, SoilData, WeatherData, MarketPrice, Crop } from './types';
+import { AppState, Language, SoilData, WeatherData, MarketPrice, Crop, PriceAlert } from './types';
 import { CROPS, DISEASES, TRANSLATIONS, EXPERT_TIPS } from './constants';
 import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse, searchLocation, fetchMarketNews } from './services';
 import { cn } from './utils';
@@ -58,6 +58,7 @@ export default function App() {
     error: null,
     isRefreshing: false,
     previousCropId: '',
+    priceAlerts: JSON.parse(localStorage.getItem('priceAlerts') || '[]'),
     theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
   });
 
@@ -69,6 +70,29 @@ export default function App() {
     }
     localStorage.setItem('theme', state.theme || 'light');
   }, [state.theme]);
+
+  useEffect(() => {
+    localStorage.setItem('priceAlerts', JSON.stringify(state.priceAlerts));
+  }, [state.priceAlerts]);
+
+  const addPriceAlert = (alert: Omit<PriceAlert, 'id' | 'isActive'>) => {
+    const newAlert: PriceAlert = {
+      ...alert,
+      id: Math.random().toString(36).substr(2, 9),
+      isActive: true
+    };
+    setState(prev => ({
+      ...prev,
+      priceAlerts: [...prev.priceAlerts, newAlert]
+    }));
+  };
+
+  const removePriceAlert = (id: string) => {
+    setState(prev => ({
+      ...prev,
+      priceAlerts: prev.priceAlerts.filter(a => a.id !== id)
+    }));
+  };
 
   const toggleTheme = () => {
     setState(prev => ({ ...prev, theme: prev.theme === 'dark' ? 'light' : 'dark' }));
@@ -209,6 +233,8 @@ export default function App() {
           t={t} 
           onDataUpdate={(marketData) => setState(prev => ({ ...prev, marketData }))} 
           onNewsUpdate={(marketNews) => setState(prev => ({ ...prev, marketNews }))}
+          onAddAlert={addPriceAlert}
+          onRemoveAlert={removePriceAlert}
         />
       );
       default: return <HomeView state={state} t={t} setActiveTab={setActiveTab} />;
