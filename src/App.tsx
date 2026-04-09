@@ -36,9 +36,12 @@ import {
   TrendingUp,
   Plus,
   Calendar,
+  Lightbulb,
+  Sparkles,
+  Bug as BugIcon,
 } from 'lucide-react';
 import { AppState, Language, SoilData, WeatherData, MarketPrice, Crop } from './types';
-import { CROPS, DISEASES, TRANSLATIONS } from './constants';
+import { CROPS, DISEASES, TRANSLATIONS, EXPERT_TIPS } from './constants';
 import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse, searchLocation, fetchMarketNews } from './services';
 import { cn } from './utils';
 import WeatherMap from './components/WeatherMap';
@@ -483,6 +486,50 @@ function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActi
       </section>
 
       <NewsSection news={state.marketNews} t={t} />
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-amber-500">
+            <Lightbulb size={20} />
+            <h2 className="font-bold text-gray-800 dark:text-slate-100">{t.expert_tips}</h2>
+          </div>
+          <button className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider hover:underline">
+            {t.view_all}
+          </button>
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          {EXPERT_TIPS.map((tip, idx) => (
+            <motion.div
+              key={tip.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="card-bg p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm flex gap-4"
+            >
+              <div className={cn(
+                "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                tip.category === 'soil' ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600" :
+                tip.category === 'pest' ? "bg-red-50 dark:bg-red-900/20 text-red-600" :
+                tip.category === 'seasonal' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600" :
+                "bg-green-50 dark:bg-green-900/20 text-green-600"
+              )}>
+                {tip.category === 'soil' ? <Database size={24} /> :
+                 tip.category === 'pest' ? <BugIcon size={24} /> :
+                 tip.category === 'seasonal' ? <CloudSun size={24} /> :
+                 <Sparkles size={24} />}
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 leading-tight">
+                  {tip.title[state.language] || tip.title.en}
+                </h3>
+                <p className="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed">
+                  {tip.content[state.language] || tip.content.en}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

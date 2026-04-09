@@ -97,6 +97,14 @@ export interface MarketNews {
   url: string;
 }
 
+export interface ExpertTip {
+  id: string;
+  title: { [key: string]: string };
+  content: { [key: string]: string };
+  category: 'soil' | 'pest' | 'seasonal' | 'general';
+  icon: string;
+}
+
 export interface AppState {
   language: Language;
   location: { lat: number; lng: number; name: string } | null;
