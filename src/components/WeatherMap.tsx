@@ -32,11 +32,13 @@ function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number
 const WeatherMap: React.FC<WeatherMapProps> = ({ lat, lng, locationName }) => {
   const [activeLayer, setActiveLayer] = useState('temp');
   const [clickedInfo, setClickedInfo] = useState<{ lat: number; lng: number; name: string; weather: any; loading: boolean } | null>(null);
-  const apiKey = (import.meta as any).env.VITE_WEATHER_API_KEY;
+  
+  // Robust API key retrieval
+  const apiKey = (import.meta as any).env?.VITE_WEATHER_API_KEY;
 
   const weatherLayers = [
     { id: 'temp', name: 'Temperature', layer: 'temp_new' },
-    { id: 'precipitation', name: 'Precipitation', layer: 'precipitation_new' },
+    { id: 'precipitation', name: 'Precipitation', layer: 'precip_new' },
     { id: 'wind', name: 'Wind Speed', layer: 'wind_new' },
     { id: 'clouds', name: 'Clouds', layer: 'clouds_new' },
   ];
@@ -85,8 +87,10 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ lat, lng, locationName }) => {
             <TileLayer
               key={activeLayer}
               attribution='&copy; <a href="https://openweathermap.org">OpenWeatherMap</a>'
-              url={`https://tile.openweathermap.org/map/${weatherLayers.find(l => l.id === activeLayer)?.layer}/{z}/{x}/{y}.png?appid=${apiKey}`}
-              opacity={0.6}
+              url={`https://{s}.tile.openweathermap.org/map/${weatherLayers.find(l => l.id === activeLayer)?.layer}/{z}/{x}/{y}.png?appid=${apiKey}`}
+              opacity={0.8}
+              minZoom={0}
+              maxZoom={19}
             />
           )}
 
