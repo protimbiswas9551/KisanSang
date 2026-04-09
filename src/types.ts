@@ -73,6 +73,20 @@ export interface TranslationMap {
   };
 }
 
+export interface MarketPrice {
+  id: string;
+  state: string;
+  district: string;
+  market: string;
+  commodity: string;
+  variety: string;
+  arrivalDate: string;
+  minPrice: number;
+  maxPrice: number;
+  modalPrice: number;
+  unit: string;
+}
+
 export interface AppState {
   language: Language;
   location: { lat: number; lng: number; name: string } | null;
@@ -83,4 +97,5 @@ export interface AppState {
   isRefreshing?: boolean;
   previousCropId?: string;
   theme?: 'light' | 'dark';
+  marketData?: MarketPrice[] | null;
 }

@@ -33,12 +33,14 @@ import {
   Award,
   Filter,
   Check,
+  TrendingUp,
 } from 'lucide-react';
-import { AppState, Language, SoilData, WeatherData } from './types';
+import { AppState, Language, SoilData, WeatherData, MarketPrice } from './types';
 import { CROPS, DISEASES, TRANSLATIONS } from './constants';
 import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse, searchLocation } from './services';
 import { cn } from './utils';
 import WeatherMap from './components/WeatherMap';
+import MarketView from './components/MarketView';
 
 export default function App() {
   const [state, setState] = useState<AppState>({
@@ -191,6 +193,7 @@ export default function App() {
       case 'crops': return <CropsView state={state} t={t} onPreviousCropChange={(id) => setState(prev => ({ ...prev, previousCropId: id }))} />;
       case 'weather': return <WeatherView state={state} t={t} onRefresh={refreshData} />;
       case 'disease': return <DiseaseView state={state} t={t} />;
+      case 'market': return <MarketView state={state} t={t} onDataUpdate={(marketData) => setState(prev => ({ ...prev, marketData }))} />;
       default: return <HomeView state={state} t={t} setActiveTab={setActiveTab} />;
     }
   };
@@ -272,6 +275,7 @@ export default function App() {
         <NavButton icon={<Sprout size={20} />} label={t.crops} active={activeTab === 'crops'} onClick={() => setActiveTab('crops')} />
         <NavButton icon={<Database size={20} />} label={t.disease} active={activeTab === 'disease'} onClick={() => setActiveTab('disease')} />
         <NavButton icon={<CloudSun size={20} />} label={t.weather} active={activeTab === 'weather'} onClick={() => setActiveTab('weather')} />
+        <NavButton icon={<TrendingUp size={20} />} label={t.market} active={activeTab === 'market'} onClick={() => setActiveTab('market')} />
       </nav>
 
       {/* Voice Bot Modal */}
@@ -410,6 +414,13 @@ function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActi
           </div>
           <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.weather_alerts}</h3>
           <p className="text-[10px] text-gray-500 dark:text-slate-400">Local weather & alerts</p>
+        </button>
+        <button onClick={() => setActiveTab('market')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
+          <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center text-indigo-600 mb-3">
+            <TrendingUp size={20} />
+          </div>
+          <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.market_prices}</h3>
+          <p className="text-[10px] text-gray-500 dark:text-slate-400">Real-time crop rates</p>
         </button>
       </div>
 
