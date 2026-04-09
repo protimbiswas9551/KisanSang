@@ -1,0 +1,6 @@
+167:    id: 'cotton',
+168-    name: { en: 'Cotton', hi: 'कपास', bn: 'তুলা', mr: 'कापूस', te: 'పత్తి', ta: 'பருத்தி', gu: 'કપાસ', kn: 'ಹತ್ತಿ' },
+169-    minPh: 5.5, maxPh: 8.5, minTemp: 21, maxTemp: 30, waterRequirement: 'Medium', sowingMonths: [4, 5, 6],
+170-    description: { en: 'Major fiber crop, "White Gold" of India.', hi: 'प्रमुख रेशा फसल, भारत का "�  {
+171-    id: 'barley',
+172-    name: { en: 'Barley', hi: 'जौ', bn: 'যব', mr: 'जव', te: 'ಬಾರ್ಲಿ', ta: 'பார்லி', gu: 'જવ', kn: 'ಬಾರ್ಲಿ' },

@@ -210,3 +210,21 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string> 
     return "Unknown Location";
   }
 }
+
+export async function searchLocation(query: string): Promise<{ lat: number; lng: number; name: string }[]> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
+    const res = await fetchWithRetry(url, {
+      headers: { 'User-Agent': 'KisanSense-App/1.0' }
+    });
+    const data = await res.json();
+    return data.map((item: any) => ({
+      lat: parseFloat(item.lat),
+      lng: parseFloat(item.lon),
+      name: item.address?.city || item.address?.town || item.address?.village || item.address?.district || item.display_name.split(',')[0]
+    }));
+  } catch (err) {
+    console.error("Search error:", err);
+    return [];
+  }
+}

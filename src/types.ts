@@ -67,6 +67,12 @@ export interface Disease {
 
 export type Language = 'hi' | 'ta' | 'te' | 'mr' | 'bn' | 'gu' | 'kn' | 'en';
 
+export interface TranslationMap {
+  [key: string]: {
+    [key: string]: string;
+  };
+}
+
 export interface AppState {
   language: Language;
   location: { lat: number; lng: number; name: string } | null;

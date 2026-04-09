@@ -31,11 +31,14 @@ import {
   Sun,
   Scale,
   Award,
+  Filter,
+  Check,
 } from 'lucide-react';
 import { AppState, Language, SoilData, WeatherData } from './types';
 import { CROPS, DISEASES, TRANSLATIONS } from './constants';
-import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse } from './services';
+import { fetchSoilData, fetchWeatherData, reverseGeocode, getGeminiResponse, searchLocation } from './services';
 import { cn } from './utils';
+import WeatherMap from './components/WeatherMap';
 
 export default function App() {
   const [state, setState] = useState<AppState>({
@@ -66,6 +69,28 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [isBotOpen, setIsBotOpen] = useState(false);
   const [isSoilModalOpen, setIsSoilModalOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const handleLocationSelect = async (loc: { lat: number; lng: number; name: string }) => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const [soil, weather] = await Promise.all([
+        fetchSoilData(loc.lat, loc.lng),
+        fetchWeatherData(loc.lat, loc.lng)
+      ]);
+      setState(prev => ({
+        ...prev,
+        location: loc,
+        soil,
+        weather,
+        loading: false,
+        error: null
+      }));
+      setIsSearchOpen(false);
+    } catch (err) {
+      setState(prev => ({ ...prev, error: 'Failed to load data for selected location', loading: false }));
+    }
+  };
 
   const refreshData = async () => {
     if (!state.location) return;
@@ -192,10 +217,14 @@ export default function App() {
             currentLanguage={state.language} 
             onLanguageChange={(lang) => setState(s => ({ ...s, language: lang }))} 
           />
-          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-slate-400">
+          <button 
+            onClick={() => setIsSearchOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg card-bg border border-gray-200 dark:border-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-900 transition-colors active:scale-95"
+          >
             <MapPin size={14} className="text-[#2D6A4F]" />
-            <span className="max-w-[80px] truncate sm:max-w-[120px]">{state.location?.name || 'Locating...'}</span>
-          </div>
+            <span className="max-w-[80px] truncate sm:max-w-[120px] text-xs font-medium">{state.location?.name || 'Locating...'}</span>
+            <Search size={12} className="opacity-50" />
+          </button>
         </div>
       </header>
 
@@ -251,6 +280,44 @@ export default function App() {
           <VoiceBot 
             state={state} 
             onClose={() => setIsBotOpen(false)} 
+            t={t}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isSearchOpen && (
+          <LocationSearchModal 
+            onClose={() => setIsSearchOpen(false)} 
+            onSelect={handleLocationSelect}
+            onUseCurrentLocation={() => {
+              setIsSearchOpen(false);
+              // Trigger the initial location fetch again
+              const init = async () => {
+                if (!navigator.geolocation) return;
+                setState(prev => ({ ...prev, loading: true }));
+                navigator.geolocation.getCurrentPosition(
+                  async (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const [soil, weather, locationName] = await Promise.all([
+                      fetchSoilData(latitude, longitude),
+                      fetchWeatherData(latitude, longitude),
+                      reverseGeocode(latitude, longitude)
+                    ]);
+                    setState(prev => ({
+                      ...prev,
+                      location: { lat: latitude, lng: longitude, name: locationName },
+                      soil,
+                      weather,
+                      loading: false,
+                      error: null
+                    }));
+                  },
+                  () => setState(prev => ({ ...prev, error: 'Location access denied', loading: false }))
+                );
+              };
+              init();
+            }}
             t={t}
           />
         )}
@@ -1008,6 +1075,20 @@ function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefre
         </div>
       </div>
 
+      {/* Weather Map View */}
+      {state.location && (
+        <div className="card-bg rounded-2xl p-6 shadow-sm space-y-4 transition-colors duration-300">
+          <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 border-b border-border pb-2">
+            {t.weather_map}
+          </h3>
+          <WeatherMap 
+            lat={state.location.lat} 
+            lng={state.location.lng} 
+            locationName={state.location.name} 
+          />
+        </div>
+      )}
+
       {/* Hourly Forecast */}
       {state.weather.hourly && state.weather.hourly.length > 0 && (
         <div className="card-bg rounded-2xl p-6 shadow-sm space-y-4 transition-colors duration-300 overflow-hidden">
@@ -1093,22 +1174,55 @@ function WeatherStat({ icon, label, value }: { icon: React.ReactNode, label: str
 
 function DiseaseView({ state, t }: { state: AppState, t: any }) {
   const [search, setSearch] = useState('');
-  const [selectedCrop, setSelectedCrop] = useState<string | null>(null);
+  const [selectedCrops, setSelectedCrops] = useState<string[]>([]);
+  const [selectedSeverities, setSelectedSeverities] = useState<string[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   const availableCrops = Array.from(new Set(DISEASES.map(d => d.crop)));
+  const severities = ['High', 'Medium', 'Low'];
 
   const filteredDiseases = DISEASES.filter(d => {
     const matchesSearch = (d.name[state.language] || d.name.en).toLowerCase().includes(search.toLowerCase()) ||
                          (d.crop).toLowerCase().includes(search.toLowerCase()) ||
                          (d.symptoms[state.language] || d.symptoms.en).toLowerCase().includes(search.toLowerCase());
-    const matchesCrop = !selectedCrop || d.crop === selectedCrop;
-    return matchesSearch && matchesCrop;
+    const matchesCrop = selectedCrops.length === 0 || selectedCrops.includes(d.crop);
+    const matchesSeverity = selectedSeverities.length === 0 || selectedSeverities.includes(d.severity);
+    return matchesSearch && matchesCrop && matchesSeverity;
   });
+
+  const toggleCrop = (cropId: string) => {
+    setSelectedCrops(prev => 
+      prev.includes(cropId) ? prev.filter(id => id !== cropId) : [...prev, cropId]
+    );
+  };
+
+  const toggleSeverity = (severity: string) => {
+    setSelectedSeverities(prev => 
+      prev.includes(severity) ? prev.filter(s => s !== severity) : [...prev, severity]
+    );
+  };
 
   return (
     <div className="space-y-6 pb-10">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t.disease_library}</h2>
+        <button 
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+          className={cn(
+            "p-2 rounded-xl transition-all duration-300 flex items-center gap-2 text-xs font-bold",
+            isFilterOpen || selectedCrops.length > 0 || selectedSeverities.length > 0
+              ? "bg-[#2D6A4F] text-white shadow-md shadow-[#2D6A4F]/20" 
+              : "card-bg text-gray-500 border border-gray-100 dark:border-slate-800"
+          )}
+        >
+          <Filter size={16} />
+          <span>{t.filter}</span>
+          {(selectedCrops.length > 0 || selectedSeverities.length > 0) && (
+            <span className="bg-white text-[#2D6A4F] w-4 h-4 rounded-full flex items-center justify-center text-[10px]">
+              {selectedCrops.length + selectedSeverities.length}
+            </span>
+          )}
+        </button>
       </div>
 
       <div className="space-y-4">
@@ -1123,37 +1237,78 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
           />
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-          <button
-            onClick={() => setSelectedCrop(null)}
-            className={cn(
-              "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all",
-              !selectedCrop 
-                ? "bg-[#2D6A4F] text-white shadow-md shadow-[#2D6A4F]/20" 
-                : "card-bg text-gray-500 border border-gray-100 dark:border-slate-800"
-            )}
-          >
-            {t.all_crops || 'All Crops'}
-          </button>
-          {availableCrops.map(cropId => {
-            const crop = CROPS.find(c => c.id === cropId);
-            const cropName = crop ? (crop.name[state.language] || crop.name.en) : cropId;
-            return (
-              <button
-                key={cropId}
-                onClick={() => setSelectedCrop(cropId)}
-                className={cn(
-                  "px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all",
-                  selectedCrop === cropId
-                    ? "bg-[#2D6A4F] text-white shadow-md shadow-[#2D6A4F]/20" 
-                    : "card-bg text-gray-500 border border-gray-100 dark:border-slate-800"
-                )}
-              >
-                {cropName}
-              </button>
-            );
-          })}
-        </div>
+        <AnimatePresence>
+          {isFilterOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="card-bg rounded-2xl p-4 border border-gray-100 dark:border-slate-800 space-y-4 shadow-sm">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.select_crops}</span>
+                    {(selectedCrops.length > 0 || selectedSeverities.length > 0) && (
+                      <button 
+                        onClick={() => { setSelectedCrops([]); setSelectedSeverities([]); }}
+                        className="text-[10px] font-bold text-red-500 uppercase hover:underline"
+                      >
+                        {t.clear_all}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {availableCrops.map(cropId => {
+                      const crop = CROPS.find(c => c.id === cropId);
+                      const cropName = crop ? (crop.name[state.language] || crop.name.en) : cropId;
+                      const isSelected = selectedCrops.includes(cropId);
+                      return (
+                        <button
+                          key={cropId}
+                          onClick={() => toggleCrop(cropId)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border",
+                            isSelected
+                              ? "bg-[#2D6A4F] text-white border-[#2D6A4F] shadow-sm"
+                              : "card-bg text-gray-500 border-gray-100 dark:border-slate-800"
+                          )}
+                        >
+                          {cropName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.select_severity}</span>
+                  <div className="flex gap-2">
+                    {severities.map(severity => {
+                      const isSelected = selectedSeverities.includes(severity);
+                      const severityLabel = t[severity.toLowerCase()] || severity;
+                      return (
+                        <button
+                          key={severity}
+                          onClick={() => toggleSeverity(severity)}
+                          className={cn(
+                            "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all border flex items-center justify-center gap-2",
+                            isSelected
+                              ? "bg-[#2D6A4F] text-white border-[#2D6A4F] shadow-sm"
+                              : "card-bg text-gray-500 border-gray-100 dark:border-slate-800"
+                          )}
+                        >
+                          {isSelected && <Check size={12} />}
+                          {severityLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="space-y-6">
@@ -1170,9 +1325,11 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
                 </div>
               </div>
               <span className={cn("text-[10px] px-2 py-1 rounded-full font-bold uppercase", 
-                d.severity === 'High' ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" : "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                d.severity === 'High' ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" : 
+                d.severity === 'Medium' ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400" :
+                "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
               )}>
-                {d.severity} Risk
+                {t[d.severity.toLowerCase()] || d.severity} Risk
               </span>
             </div>
             
@@ -1496,6 +1653,100 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
           {isListening ? 'Listening...' : 'Tap to Speak'}
         </p>
       </div>
+    </motion.div>
+  );
+}
+
+function LocationSearchModal({ onClose, onSelect, onUseCurrentLocation, t }: { onClose: () => void, onSelect: (loc: any) => void, onUseCurrentLocation: () => void, t: any }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    setIsSearching(true);
+    const res = await searchLocation(query);
+    setResults(res);
+    setIsSearching(false);
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/60 backdrop-blur-sm pt-20"
+      onClick={onClose}
+    >
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0, y: -20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: -20 }}
+        className="card-bg w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-4 border-b border-gray-100 dark:border-slate-800 space-y-3">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input 
+              autoFocus
+              type="text" 
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={t.search_location}
+              className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/20 transition-all"
+            />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-4 h-4 border-2 border-[#2D6A4F] border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </form>
+
+          <button 
+            onClick={onUseCurrentLocation}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-50 dark:bg-green-900/20 text-[#2D6A4F] text-xs font-bold border border-green-100 dark:border-green-900/30 active:scale-95 transition-all"
+          >
+            <MapPin size={14} />
+            {t.use_current_location}
+          </button>
+        </div>
+
+        <div className="max-h-[60vh] overflow-y-auto p-2">
+          {results.length > 0 ? (
+            <div className="space-y-1">
+              {results.map((res, i) => (
+                <button
+                  key={i}
+                  onClick={() => onSelect(res)}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-slate-900 rounded-xl transition-colors text-left group"
+                >
+                  <div className="w-8 h-8 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-gray-400 group-hover:text-[#2D6A4F] transition-colors">
+                    <MapPin size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-700 dark:text-slate-200">{res.name}</span>
+                    <span className="text-[10px] text-gray-400 truncate max-w-[280px]">Lat: {res.lat.toFixed(4)}, Lng: {res.lng.toFixed(4)}</span>
+                  </div>
+                  <ChevronRight size={16} className="ml-auto text-gray-300" />
+                </button>
+              ))}
+            </div>
+          ) : query && !isSearching ? (
+            <div className="py-10 text-center space-y-2">
+              <div className="w-12 h-12 bg-gray-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto text-gray-300">
+                <Search size={24} />
+              </div>
+              <p className="text-sm text-gray-500">{t.no_results}</p>
+            </div>
+          ) : (
+            <div className="py-10 text-center space-y-2">
+              <p className="text-xs text-gray-400 uppercase tracking-widest font-bold">Search for a city or village</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
