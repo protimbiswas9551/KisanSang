@@ -266,3 +266,56 @@ export async function fetchMarketPrices(): Promise<any[]> {
     ];
   }
 }
+
+export async function fetchMarketNews(): Promise<any[]> {
+  try {
+    // In a real app, we would use a news API like NewsAPI.org or GNews
+    // For this demo, we'll use a public search or fallback to relevant mock news
+    // since most news APIs require a private key.
+    const apiKey = process.env.VITE_NEWS_API_KEY;
+    if (apiKey) {
+      const url = `https://newsapi.org/v2/everything?q=agriculture+market+india&sortBy=publishedAt&apiKey=${apiKey}&pageSize=5`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        return data.articles.map((a: any, i: number) => ({
+          id: `news-${i}`,
+          title: a.title,
+          summary: a.description,
+          source: a.source.name,
+          date: new Date(a.publishedAt).toLocaleDateString(),
+          url: a.url
+        }));
+      }
+    }
+    throw new Error("No API key or API failed");
+  } catch (err) {
+    console.warn("Market News API error, using fallback news:", err);
+    return [
+      {
+        id: 'n1',
+        title: 'Government increases MSP for Kharif crops',
+        summary: 'The Union Cabinet has approved an increase in the Minimum Support Price (MSP) for all mandated Kharif crops for the marketing season 2026-27.',
+        source: 'AgriNews India',
+        date: '09/04/2026',
+        url: '#'
+      },
+      {
+        id: 'n2',
+        title: 'Monsoon predicted to be normal this year',
+        summary: 'IMD predicts a normal monsoon which is expected to boost agricultural production and stabilize market prices of essential commodities.',
+        source: 'Weather Watch',
+        date: '08/04/2026',
+        url: '#'
+      },
+      {
+        id: 'n3',
+        title: 'New export policy for Basmati Rice announced',
+        summary: 'The government has revised the export floor price for Basmati rice to encourage exports and support farmers in the upcoming season.',
+        source: 'Trade Times',
+        date: '07/04/2026',
+        url: '#'
+      }
+    ];
+  }
+}

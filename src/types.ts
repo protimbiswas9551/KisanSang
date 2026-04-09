@@ -87,6 +87,15 @@ export interface MarketPrice {
   unit: string;
 }
 
+export interface MarketNews {
+  id: string;
+  title: string;
+  summary: string;
+  source: string;
+  date: string;
+  url: string;
+}
+
 export interface AppState {
   language: Language;
   location: { lat: number; lng: number; name: string } | null;
@@ -98,4 +107,5 @@ export interface AppState {
   previousCropId?: string;
   theme?: 'light' | 'dark';
   marketData?: MarketPrice[] | null;
+  marketNews?: MarketNews[] | null;
 }

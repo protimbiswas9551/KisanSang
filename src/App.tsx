@@ -193,7 +193,14 @@ export default function App() {
       case 'crops': return <CropsView state={state} t={t} onPreviousCropChange={(id) => setState(prev => ({ ...prev, previousCropId: id }))} />;
       case 'weather': return <WeatherView state={state} t={t} onRefresh={refreshData} />;
       case 'disease': return <DiseaseView state={state} t={t} />;
-      case 'market': return <MarketView state={state} t={t} onDataUpdate={(marketData) => setState(prev => ({ ...prev, marketData }))} />;
+      case 'market': return (
+        <MarketView 
+          state={state} 
+          t={t} 
+          onDataUpdate={(marketData) => setState(prev => ({ ...prev, marketData }))} 
+          onNewsUpdate={(marketNews) => setState(prev => ({ ...prev, marketNews }))}
+        />
+      );
       default: return <HomeView state={state} t={t} setActiveTab={setActiveTab} />;
     }
   };

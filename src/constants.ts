@@ -244,6 +244,8 @@ export const TRANSLATIONS: TranslationMap = {
     select_state: 'Select State',
     all_states: 'All States',
     search_commodity: 'Search commodity...',
+    latest_news: 'Latest Agricultural News',
+    read_more: 'Read More',
   },
   hi: {
     language_name: 'हिंदी',
@@ -317,6 +319,8 @@ export const TRANSLATIONS: TranslationMap = {
     search_location: 'स्थान खोजें...',
     no_results: 'कोई परिणाम नहीं मिला',
     use_current_location: 'वर्तमान स्थान का उपयोग करें',
+    latest_news: 'नवीनतम कृषि समाचार',
+    read_more: 'अधिक पढ़ें',
   },
   bn: {
     language_name: 'বাংলা',
@@ -390,6 +394,8 @@ export const TRANSLATIONS: TranslationMap = {
     search_location: 'স্থান অনুসন্ধান করুন...',
     no_results: 'কোন ফলাফল পাওয়া যায়নি',
     use_current_location: 'বর্তমান অবস্থান ব্যবহার করুন',
+    latest_news: 'সর্বশেষ কৃষি সংবাদ',
+    read_more: 'আরও পড়ুন',
   },
   mr: {
     language_name: 'मराठी',
@@ -463,6 +469,8 @@ export const TRANSLATIONS: TranslationMap = {
     search_location: 'स्थान शोधा...',
     no_results: 'निकाल सापडले नाहीत',
     use_current_location: 'वर्तमान स्थान वापरा',
+    latest_news: 'नवीनतम कृषी बातम्या',
+    read_more: 'अधिक वाचा',
   },
   te: {
     language_name: 'తెలుగు',
@@ -536,6 +544,8 @@ export const TRANSLATIONS: TranslationMap = {
     search_location: 'స్థానాన్ని శోధించండి...',
     no_results: 'ఫలితాలు ఏవీ లేవు',
     use_current_location: 'ప్రస్తుత స్థానాన్ని ఉపయోగించండి',
+    latest_news: 'తాజా వ్యవసాయ వార్తలు',
+    read_more: 'మరింత చదవండి',
   },
   ta: {
     language_name: 'தமிழ்',
@@ -609,6 +619,8 @@ export const TRANSLATIONS: TranslationMap = {
     search_location: 'இருப்பிடத்தைத் தேடுங்கள்...',
     no_results: 'முடிவுகள் எதுவும் இல்லை',
     use_current_location: 'தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்',
+    latest_news: 'சமீபத்திய விவசாய செய்திகள்',
+    read_more: 'மேலும் படிக்க',
   },
   gu: {
     language_name: 'ગુજરાતી',
@@ -690,6 +702,8 @@ export const TRANSLATIONS: TranslationMap = {
     select_state: 'રાજ્ય પસંદ કરો',
     all_states: 'બધા રાજ્યો',
     search_commodity: 'વસ્તુ શોધો...',
+    latest_news: 'નવીનતમ કૃષિ સમાચાર',
+    read_more: 'વધુ વાંચો',
   },
   kn: {
     language_name: 'ಕನ್ನಡ',
@@ -771,5 +785,7 @@ export const TRANSLATIONS: TranslationMap = {
     select_state: 'ರಾಜ್ಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ',
     all_states: 'ಎಲ್ಲಾ ರಾಜ್ಯಗಳು',
     search_commodity: 'ವಸ್ತುವನ್ನು ಹುಡುಕಿ...',
+    latest_news: 'ಇತ್ತೀಚಿನ ಕೃಷಿ ಸುದ್ದಿ',
+    read_more: 'ಮತ್ತಷ್ಟು ಓದಿ',
   },
 };
