@@ -267,14 +267,11 @@ export async function fetchMarketPrices(): Promise<any[]> {
   }
 }
 
-export async function fetchMarketNews(): Promise<any[]> {
+export async function fetchMarketNews(query: string = "agriculture market india"): Promise<any[]> {
   try {
-    // In a real app, we would use a news API like NewsAPI.org or GNews
-    // For this demo, we'll use a public search or fallback to relevant mock news
-    // since most news APIs require a private key.
     const apiKey = process.env.VITE_NEWS_API_KEY;
     if (apiKey) {
-      const url = `https://newsapi.org/v2/everything?q=agriculture+market+india&sortBy=publishedAt&apiKey=${apiKey}&pageSize=5`;
+      const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&apiKey=${apiKey}&pageSize=5`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -291,7 +288,8 @@ export async function fetchMarketNews(): Promise<any[]> {
     throw new Error("No API key or API failed");
   } catch (err) {
     console.warn("Market News API error, using fallback news:", err);
-    return [
+    // Filter fallback news based on query if possible, or just return default
+    const fallbackNews = [
       {
         id: 'n1',
         title: 'Government increases MSP for Kharif crops',
@@ -317,5 +315,16 @@ export async function fetchMarketNews(): Promise<any[]> {
         url: '#'
       }
     ];
+
+    if (query !== "agriculture market india") {
+      // Simple local filtering for demo purposes if no API key
+      const filtered = fallbackNews.filter(n => 
+        n.title.toLowerCase().includes(query.toLowerCase()) || 
+        n.summary.toLowerCase().includes(query.toLowerCase())
+      );
+      return filtered.length > 0 ? filtered : fallbackNews;
+    }
+
+    return fallbackNews;
   }
 }

@@ -87,7 +87,7 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ lat, lng, locationName }) => {
             <TileLayer
               key={activeLayer}
               attribution='&copy; <a href="https://openweathermap.org">OpenWeatherMap</a>'
-              url={`https://{s}.tile.openweathermap.org/map/${weatherLayers.find(l => l.id === activeLayer)?.layer}/{z}/{x}/{y}.png?appid=${apiKey}`}
+              url={`https://tile.openweathermap.org/map/${weatherLayers.find(l => l.id === activeLayer)?.layer}/{z}/{x}/{y}.png?appid=${apiKey}`}
               opacity={0.8}
               minZoom={0}
               maxZoom={19}

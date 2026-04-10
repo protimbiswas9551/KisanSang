@@ -39,6 +39,10 @@ import {
   Lightbulb,
   Sparkles,
   Bug as BugIcon,
+  Activity,
+  CloudRain,
+  ShieldCheck,
+  RefreshCw,
 } from 'lucide-react';
 import { AppState, Language, SoilData, WeatherData, MarketPrice, Crop, PriceAlert } from './types';
 import { CROPS, DISEASES, TRANSLATIONS, EXPERT_TIPS } from './constants';
@@ -47,6 +51,81 @@ import { cn } from './utils';
 import WeatherMap from './components/WeatherMap';
 import MarketView from './components/MarketView';
 import NewsSection from './components/NewsSection';
+
+function LoadingScreen({ onSkip }: { onSkip?: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+      <div className="relative">
+        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Sprout className="text-primary animate-pulse" size={24} />
+        </div>
+      </div>
+      <div className="text-center space-y-2">
+        <h3 className="text-lg font-bold text-text">KisanSense</h3>
+        <p className="text-xs text-secondary animate-pulse">Analyzing agricultural data...</p>
+      </div>
+      {onSkip && (
+        <button 
+          onClick={onSkip}
+          className="text-xs text-primary font-bold hover:underline mt-4"
+        >
+          Skip & Use Default Location
+        </button>
+      )}
+    </div>
+  );
+}
+
+function getRotationAdvice(previousCropId: string | undefined, language: string) {
+  if (!previousCropId) return null;
+  
+  const prevCrop = CROPS.find(c => c.id === previousCropId);
+  if (!prevCrop) return null;
+
+  const recommendations = {
+    cereal: CROPS.filter(c => c.rotationGroup === 'pulse' || c.rotationGroup === 'legume'),
+    pulse: CROPS.filter(c => c.rotationGroup === 'cereal' || c.rotationGroup === 'oilseed'),
+    legume: CROPS.filter(c => c.rotationGroup === 'cereal' || c.rotationGroup === 'vegetable'),
+    oilseed: CROPS.filter(c => c.rotationGroup === 'pulse' || c.rotationGroup === 'cereal'),
+    vegetable: CROPS.filter(c => c.rotationGroup === 'cereal' || c.rotationGroup === 'pulse'),
+    millet: CROPS.filter(c => c.rotationGroup === 'pulse' || c.rotationGroup === 'legume'),
+  };
+
+  const nextCrops = (recommendations[prevCrop.rotationGroup as keyof typeof recommendations] || CROPS.filter(c => c.id !== previousCropId));
+  const nextCrop = nextCrops[0] || CROPS.find(c => c.id !== previousCropId);
+
+  if (!nextCrop) return null;
+
+  const benefits: { [key: string]: { [key: string]: string } } = {
+    cereal: {
+      en: 'Rotating with pulses improves soil nitrogen levels.',
+      hi: 'दलहन के साथ फसल चक्र मिट्टी में नाइट्रोजन के स्तर में सुधार करता है।',
+    },
+    pulse: {
+      en: 'Cereals benefit from the nitrogen fixed by previous pulses.',
+      hi: 'पिछली दालों द्वारा स्थिर नाइट्रोजन से अनाज को लाभ होता है।',
+    },
+    legume: {
+      en: 'Legumes restore soil fertility for the next crop.',
+      hi: 'दलहन अगली फसल के लिए मिट्टी की उर्वरता बहाल करते हैं।',
+    },
+    oilseed: {
+      en: 'Rotating oilseeds helps in breaking pest and disease cycles.',
+      hi: 'तिलहन का फसल चक्र कीट और रोग चक्र को तोड़ने में मदद करता है।',
+    },
+    vegetable: {
+      en: 'Vegetables followed by cereals maintain balanced nutrient demand.',
+      hi: 'सब्जियों के बाद अनाज संतुलित पोषक तत्वों की मांग बनाए रखते हैं।',
+    }
+  };
+
+  return {
+    nextCrop,
+    reason: language === 'hi' ? 'मिट्टी के स्वास्थ्य के लिए अनुशंसित' : 'Recommended for soil health',
+    benefit: benefits[prevCrop.rotationGroup]?.[language] || benefits[prevCrop.rotationGroup]?.en || 'Rotating crops maintains soil health and breaks pest cycles.'
+  };
+}
 
 export default function App() {
   const [state, setState] = useState<AppState>({
@@ -102,6 +181,20 @@ export default function App() {
   const [isBotOpen, setIsBotOpen] = useState(false);
   const [isSoilModalOpen, setIsSoilModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [activeCropId, setActiveCropId] = useState<string | null>(null);
+
+  // Fetch relevant news when active crop changes
+  useEffect(() => {
+    if (activeCropId) {
+      const crop = CROPS.find(c => c.id === activeCropId);
+      if (crop) {
+        const query = `${crop.name.en} agriculture news india`;
+        fetchMarketNews(query).then(news => {
+          setState(prev => ({ ...prev, marketNews: news }));
+        });
+      }
+    }
+  }, [activeCropId]);
 
   const handleLocationSelect = async (loc: { lat: number; lng: number; name: string }) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -224,7 +317,7 @@ export default function App() {
     switch (activeTab) {
       case 'home': return <HomeView state={state} t={t} setActiveTab={setActiveTab} />;
       case 'soil': return <SoilView state={state} t={t} onRefresh={refreshData} onManualInput={() => setIsSoilModalOpen(true)} />;
-      case 'crops': return <CropsView state={state} t={t} onPreviousCropChange={(id) => setState(prev => ({ ...prev, previousCropId: id }))} />;
+      case 'crops': return <CropsView state={state} t={t} onPreviousCropChange={(id) => setState(prev => ({ ...prev, previousCropId: id }))} setActiveCropId={setActiveCropId} />;
       case 'weather': return <WeatherView state={state} t={t} onRefresh={refreshData} />;
       case 'disease': return <DiseaseView state={state} t={t} />;
       case 'market': return (
@@ -242,52 +335,88 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-bg text-text font-sans pb-20 transition-colors duration-300">
+    <div className="min-h-screen bg-bg text-text font-sans pb-24 transition-colors duration-300">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-card border-b border-border px-4 py-3 flex items-center justify-between transition-colors duration-300">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#2D6A4F] rounded-lg flex items-center justify-center text-white">
-            <Sprout size={20} />
+      <header className="sticky top-0 z-40 glass border-b border-border/50 px-4 py-3 flex items-center justify-between transition-colors duration-300">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+            <Sprout size={22} strokeWidth={2.5} />
           </div>
-          <h1 className="font-bold text-lg text-[#2D6A4F]">KisanSense</h1>
+          <div>
+            <h1 className="font-display font-bold text-lg text-primary leading-none">KisanSense</h1>
+            <p className="text-[10px] font-medium text-secondary uppercase tracking-wider mt-0.5">Smart Agriculture</p>
+          </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setIsSearchOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800/50 border border-transparent hover:border-primary/30 text-secondary transition-all active:scale-95"
+          >
+            <MapPin size={14} className="text-primary" />
+            <span className="max-w-[80px] truncate sm:max-w-[120px] text-xs font-semibold text-text">{state.location?.name || 'Locating...'}</span>
+            <Search size={12} className="opacity-40" />
+          </button>
+
+          <div className="h-6 w-px bg-border/50 mx-1" />
+
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-900 transition-colors active:scale-95"
+            className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-secondary hover:text-primary transition-all active:scale-95"
           >
             {state.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
+          
           <LanguageSelector 
             currentLanguage={state.language} 
             onLanguageChange={(lang) => setState(s => ({ ...s, language: lang }))} 
           />
-          <button 
-            onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg card-bg border border-gray-200 dark:border-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-900 transition-colors active:scale-95"
-          >
-            <MapPin size={14} className="text-[#2D6A4F]" />
-            <span className="max-w-[80px] truncate sm:max-w-[120px] text-xs font-medium">{state.location?.name || 'Locating...'}</span>
-            <Search size={12} className="opacity-50" />
-          </button>
         </div>
       </header>
 
-      <main className="p-4 max-w-2xl mx-auto">
+      <main className="p-4 max-w-2xl mx-auto space-y-6">
         {state.error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 p-3 rounded-lg mb-4 flex items-center justify-between text-red-700 dark:text-red-400 text-sm">
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={16} />
-              {state.error}
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-50 dark:bg-red-900/10 border border-red-200/50 dark:border-red-800/20 p-3.5 rounded-2xl flex items-center justify-between text-red-700 dark:text-red-400 text-sm shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <AlertTriangle size={16} />
+              </div>
+              <span className="font-medium">{state.error}</span>
             </div>
-            <button onClick={() => setState(prev => ({ ...prev, error: null }))}>
+            <button 
+              onClick={() => setState(prev => ({ ...prev, error: null }))}
+              className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+            >
               <X size={16} />
             </button>
-          </div>
+          </motion.div>
         )}
         {renderContent()}
       </main>
+
+      {/* Floating Bottom Navigation */}
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md">
+        <div className="glass rounded-2xl p-2 shadow-2xl shadow-black/10 dark:shadow-primary/5 border border-white/20 dark:border-white/5 flex items-center justify-between">
+          <NavItem active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Home size={20} />} label={t.home} />
+          <NavItem active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} icon={<Database size={20} />} label={t.soil} />
+          <NavItem active={activeTab === 'crops'} onClick={() => setActiveTab('crops')} icon={<Sprout size={20} />} label={t.crops} />
+          <NavItem active={activeTab === 'weather'} onClick={() => setActiveTab('weather')} icon={<CloudSun size={20} />} label={t.weather} />
+          <NavItem active={activeTab === 'market'} onClick={() => setActiveTab('market')} icon={<TrendingUp size={20} />} label={t.market} />
+        </div>
+      </nav>
+
+      {/* AI Bot Toggle */}
+      <button 
+        onClick={() => setIsBotOpen(true)}
+        className="fixed bottom-24 right-6 z-40 w-14 h-14 bg-primary text-white rounded-2xl shadow-xl shadow-primary/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-all group"
+      >
+        <MessageSquare size={24} className="group-hover:rotate-12 transition-transform" />
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse" />
+      </button>
 
       {/* Manual Soil Input Modal */}
       <AnimatePresence>
@@ -304,22 +433,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 py-2 flex justify-around items-center z-50 shadow-lg transition-colors duration-300">
-        <NavButton icon={<Home size={20} />} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
-        <NavButton icon={<Droplets size={20} />} label={t.soil} active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} />
-        <div className="relative -top-6">
-          <button 
-            onClick={() => setIsBotOpen(true)}
-            className="w-14 h-14 bg-[#2D6A4F] rounded-full flex items-center justify-center text-white shadow-xl border-4 border-card active:scale-95 transition-all"
-          >
-            <Mic size={28} />
-          </button>
-        </div>
-        <NavButton icon={<Sprout size={20} />} label={t.crops} active={activeTab === 'crops'} onClick={() => setActiveTab('crops')} />
-        <NavButton icon={<Database size={20} />} label={t.disease} active={activeTab === 'disease'} onClick={() => setActiveTab('disease')} />
-        <NavButton icon={<CloudSun size={20} />} label={t.weather} active={activeTab === 'weather'} onClick={() => setActiveTab('weather')} />
-        <NavButton icon={<TrendingUp size={20} />} label={t.market} active={activeTab === 'market'} onClick={() => setActiveTab('market')} />
-      </nav>
+      {/* Old nav removed in favor of floating dock */}
 
       {/* Voice Bot Modal */}
       <AnimatePresence>
@@ -375,188 +489,137 @@ export default function App() {
   );
 }
 
-function NavButton({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active: boolean, onClick: () => void }) {
+function NavItem({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
   return (
-    <button onClick={onClick} className={cn("flex flex-col items-center gap-1 transition-colors", active ? "text-[#2D6A4F]" : "text-gray-400")}>
-      {icon}
-      <span className="text-[10px] font-medium">{label}</span>
+    <button 
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-300 relative",
+        active ? "text-primary" : "text-secondary hover:text-text"
+      )}
+    >
+      {active && (
+        <motion.div 
+          layoutId="nav-active"
+          className="absolute inset-0 bg-primary/10 rounded-xl"
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
+      <div className={cn("transition-transform duration-300", active && "scale-110")}>
+        {icon}
+      </div>
+      <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
     </button>
   );
 }
 
-function LoadingScreen({ onSkip }: { onSkip?: () => void }) {
+function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActiveTab: (tab: string) => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 gap-4 bg-bg min-h-[60vh]">
-      <div className="w-12 h-12 border-4 border-[#2D6A4F] border-t-transparent rounded-full animate-spin"></div>
-      <p className="text-gray-500 dark:text-slate-400 animate-pulse">Loading KisanSense...</p>
-      {onSkip && (
-        <button 
-          onClick={onSkip}
-          className="mt-4 text-xs text-[#2D6A4F] font-medium underline"
-        >
-          Skip and use default location
-        </button>
-      )}
-    </div>
-  );
-}
-
-function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActiveTab: (t: string) => void }) {
-  return (
-    <div className="space-y-6">
-      <section className="bg-gradient-to-br from-[#2D6A4F] to-[#1B4332] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-        {(state.soil?.isEstimated || state.weather?.isEstimated) && (
-          <div className="absolute top-0 right-0 bg-amber-500 text-[8px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-tighter">
-            Estimated Data
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Hero Welcome */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-primary p-8 text-white shadow-2xl shadow-primary/20">
+        <div className="relative z-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-bold uppercase tracking-widest">
+            <Sparkles size={12} />
+            {t.welcome}
           </div>
-        )}
-        <h2 className="text-2xl font-bold mb-2">{t.welcome}</h2>
-        <p className="text-green-100 text-sm mb-6 opacity-90">Listen to your land. Grow smarter crops.</p>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white/10 dark:bg-black/20 backdrop-blur-sm rounded-xl p-3 border border-white/20 dark:border-white/10">
-            <div className="flex items-center gap-2 mb-1">
-              <Droplets size={16} className="text-green-300" />
-              <span className="text-xs font-medium text-green-200">Soil pH</span>
-            </div>
-            <div className="text-xl font-bold">{state.soil?.ph.toFixed(1) || '--'}</div>
-          </div>
-          <div className="bg-white/10 dark:bg-black/20 backdrop-blur-sm rounded-xl p-3 border border-white/20 dark:border-white/10">
-            <div className="flex items-center gap-2 mb-1">
-              <Thermometer size={16} className="text-orange-300" />
-              <span className="text-xs font-medium text-orange-200">Temp</span>
-            </div>
-            <div className="text-xl font-bold">{state.weather?.temp.toFixed(0) || '--'}°C</div>
+          <h2 className="text-4xl font-display font-bold leading-tight text-balance">
+            Empowering Your <br /> Farming Journey
+          </h2>
+          <p className="text-white/80 text-sm max-w-xs leading-relaxed">
+            Get real-time soil intelligence, crop advice, and market insights tailored for your land.
+          </p>
+          <div className="flex gap-3 pt-2">
+            <button 
+              onClick={() => setActiveTab('soil')}
+              className="bg-white text-primary font-bold px-6 py-3 rounded-2xl shadow-lg shadow-black/10 active:scale-95 transition-all flex items-center gap-2"
+            >
+              {t.check_soil}
+              <ArrowRight size={18} />
+            </button>
           </div>
         </div>
-      </section>
-
-      <div className="grid grid-cols-2 gap-4">
-        <button onClick={() => setActiveTab('soil')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
-          <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center text-[#2D6A4F] mb-3">
-            <Droplets size={20} />
-          </div>
-          <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.soil_intelligence}</h3>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400">Check NPK & pH levels</p>
-        </button>
-        <button onClick={() => setActiveTab('crops')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
-          <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center text-amber-600 mb-3">
-            <Sprout size={20} />
-          </div>
-          <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.crop_advisor}</h3>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400">Best crops for your land</p>
-        </button>
-        <button onClick={() => setActiveTab('disease')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
-          <div className="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center text-red-600 mb-3">
-            <Database size={20} />
-          </div>
-          <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.disease_library}</h3>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400">Identify & treat crop diseases</p>
-        </button>
-        <button onClick={() => setActiveTab('weather')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
-          <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center text-blue-600 mb-3">
-            <CloudSun size={20} />
-          </div>
-          <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.weather_alerts}</h3>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400">Local weather & alerts</p>
-        </button>
-        <button onClick={() => setActiveTab('market')} className="card-bg p-4 rounded-xl shadow-sm text-left active:bg-gray-50 dark:active:bg-slate-900 transition-colors">
-          <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center text-indigo-600 mb-3">
-            <TrendingUp size={20} />
-          </div>
-          <h3 className="font-bold text-sm mb-1 text-gray-800 dark:text-slate-100">{t.market_prices}</h3>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400">Real-time crop rates</p>
-        </button>
+        
+        {/* Abstract background shapes */}
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-48 h-48 bg-primary-dark/30 rounded-full blur-2xl" />
+        <Sprout size={180} className="absolute -bottom-10 -right-10 text-white/10 rotate-12" />
       </div>
 
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-800 dark:text-slate-100">Smart Alerts</h2>
-          <span className="text-[10px] text-[#2D6A4F] font-bold uppercase tracking-wider">Live</span>
-        </div>
-        <div className="space-y-3">
-          {state.weather && state.weather.humidity > 80 && (
-            <AlertCard 
-              type="warning" 
-              title={t.fungal_risk_title} 
-              desc={t.fungal_risk_desc}
-            />
-          )}
-          {state.weather && (state.weather.temp > 35 || state.weather.forecast?.some(d => d.high > 35)) && (
-            <AlertCard 
-              type="danger" 
-              title={t.heat_stress_title} 
-              desc={t.heat_stress_desc}
-            />
-          )}
-          {state.weather && (state.weather.temp < 10 || state.weather.forecast?.some(d => d.low < 10)) && (
-            <AlertCard 
-              type="warning" 
-              title={t.frost_alert_title} 
-              desc={t.frost_alert_desc}
-            />
-          )}
-          {state.weather?.forecast?.some(day => day.rainProb > 70) && (
-            <AlertCard 
-              type="info" 
-              title={t.heavy_rain_title} 
-              desc={t.heavy_rain_desc}
-            />
-          )}
-          <AlertCard 
-            type="info" 
-            title={t.sowing_window_title} 
-            desc={t.sowing_window_desc}
-          />
-        </div>
-      </section>
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        <QuickStatCard 
+          icon={<Thermometer className="text-orange-500" />} 
+          label="Temperature" 
+          value={`${state.weather?.temp.toFixed(0)}°C`}
+          subValue={state.weather?.description}
+          onClick={() => setActiveTab('weather')}
+        />
+        <QuickStatCard 
+          icon={<Droplets className="text-blue-500" />} 
+          label="Soil pH" 
+          value={state.soil?.ph.toFixed(1)}
+          subValue={state.soil?.texture}
+          onClick={() => setActiveTab('soil')}
+        />
+      </div>
 
-      <NewsSection news={state.marketNews} t={t} />
-
+      {/* Expert Tips Section */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-amber-500">
-            <Lightbulb size={20} />
-            <h2 className="font-bold text-gray-800 dark:text-slate-100">{t.expert_tips}</h2>
-          </div>
-          <button className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider hover:underline">
-            {t.view_all}
-          </button>
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <Lightbulb className="text-amber-500" size={20} />
+            {t.expert_tips}
+          </h3>
+          <button className="text-xs font-bold text-primary hover:underline">{t.view_all}</button>
         </div>
-        <div className="grid grid-cols-1 gap-4">
-          {EXPERT_TIPS.map((tip, idx) => (
-            <motion.div
-              key={tip.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="card-bg p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm flex gap-4"
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-1">
+          {EXPERT_TIPS.map((tip, i) => (
+            <motion.div 
+              key={i}
+              whileHover={{ y: -4 }}
+              className="min-w-[280px] card-bg p-5 space-y-3 border-l-4 border-l-primary"
             >
-              <div className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                tip.category === 'soil' ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600" :
-                tip.category === 'pest' ? "bg-red-50 dark:bg-red-900/20 text-red-600" :
-                tip.category === 'seasonal' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600" :
-                "bg-green-50 dark:bg-green-900/20 text-green-600"
-              )}>
-                {tip.category === 'soil' ? <Database size={24} /> :
-                 tip.category === 'pest' ? <BugIcon size={24} /> :
-                 tip.category === 'seasonal' ? <CloudSun size={24} /> :
-                 <Sparkles size={24} />}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{tip.category}</span>
+                <Award size={14} className="text-amber-500" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 leading-tight">
-                  {tip.title[state.language] || tip.title.en}
-                </h3>
-                <p className="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed">
-                  {tip.content[state.language] || tip.content.en}
-                </p>
-              </div>
+              <h4 className="font-bold text-sm leading-snug">{tip.title[state.language] || tip.title.en}</h4>
+              <p className="text-xs text-secondary leading-relaxed line-clamp-2">{tip.content[state.language] || tip.content.en}</p>
             </motion.div>
           ))}
         </div>
       </section>
+
+      {/* News Section */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <TrendingUp className="text-primary" size={20} />
+            {t.latest_news}
+          </h3>
+        </div>
+        <NewsSection news={state.marketNews || []} t={t} />
+      </section>
     </div>
+  );
+}
+
+function QuickStatCard({ icon, label, value, subValue, onClick }: { icon: React.ReactNode, label: string, value: any, subValue: any, onClick: () => void }) {
+  return (
+    <button 
+      onClick={onClick}
+      className="card-bg p-5 text-left space-y-3 group hover:border-primary/30 transition-all active:scale-95"
+    >
+      <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center group-hover:scale-110 transition-transform">
+        {icon}
+      </div>
+      <div>
+        <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{label}</p>
+        <h4 className="text-2xl font-display font-bold mt-1">{value}</h4>
+        <p className="text-[10px] font-medium text-secondary mt-1 capitalize">{subValue}</p>
+      </div>
+    </button>
   );
 }
 
@@ -587,86 +650,110 @@ function SoilView({ state, t, onRefresh, onManualInput }: { state: AppState, t: 
   if (!state.soil) return <LoadingScreen />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t.soil_intelligence}</h2>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h2 className="text-2xl font-bold text-text">{t.soil_intelligence}</h2>
+          <p className="text-xs text-secondary font-medium mt-1 uppercase tracking-wider">Real-time Analysis</p>
+        </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={onRefresh}
             disabled={state.isRefreshing}
-            className={cn("p-2 rounded-lg card-bg text-gray-600 dark:text-slate-400 active:scale-95 transition-all", state.isRefreshing && "animate-spin")}
+            className={cn("p-2.5 rounded-xl card-bg text-secondary hover:text-primary active:scale-95 transition-all", state.isRefreshing && "animate-spin")}
           >
-            <Database size={16} />
+            <Database size={18} />
           </button>
-          {state.soil.isEstimated && (
-            <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold">
-              ESTIMATED
-            </span>
-          )}
-        </div>
-      </div>
-      
-      {state.soil.isEstimated && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 p-3 rounded-xl flex items-center justify-between gap-2 text-amber-800 dark:text-amber-200 text-[10px] leading-tight">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={14} className="shrink-0" />
-            Soil data service is currently busy. Showing estimated values.
-          </div>
           <button 
             onClick={onManualInput}
-            className="shrink-0 bg-amber-600 text-white px-2 py-1 rounded font-bold uppercase"
+            className="btn-primary text-xs flex items-center gap-2"
           >
+            <Plus size={14} />
             {t.manual_input}
           </button>
         </div>
-      )}
-
-      <div className="card-bg rounded-2xl p-6 shadow-sm space-y-8 transition-colors duration-300">
-        <div className="space-y-4">
-          <Gauge label={t.nitrogen} value={state.soil.nitrogen} max={200} unit="mg/kg" color="bg-blue-500" />
-          <Gauge label={t.phosphorus} value={state.soil.soc} max={100} unit="mg/kg" color="bg-purple-500" />
-          <Gauge label={t.potassium} value={120} max={300} unit="mg/kg" color="bg-orange-500" />
-        </div>
-
-        <div className="pt-6 border-t border-border">
-          <SoilTextureTriangle 
-            sand={state.soil.sand} 
-            silt={state.soil.silt} 
-            clay={state.soil.clay} 
-            t={t} 
-          />
-        </div>
-
-        <div className="pt-6 border-t border-border">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-gray-500 dark:text-slate-400">{t.ph_level}</span>
-            <span className={cn("px-3 py-1 rounded-full text-xs font-bold", 
-              state.soil.ph < 6 ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" : 
-              state.soil.ph > 8 ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-            )}>
-              {state.soil.ph < 6 ? 'Acidic' : state.soil.ph > 8 ? 'Alkaline' : 'Neutral'}
-            </span>
-          </div>
-          <div className="relative h-4 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 rounded-full">
-            <div 
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white dark:bg-slate-100 border-2 border-gray-800 dark:border-slate-900 rounded-full shadow-md transition-all duration-500"
-              style={{ left: `${(state.soil.ph / 14) * 100}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
-            <span>0 (Acidic)</span>
-            <span>7 (Neutral)</span>
-            <span>14 (Alkaline)</span>
-          </div>
-        </div>
       </div>
 
-      <div className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/30 p-4 rounded-xl">
-        <h4 className="font-bold text-[#2D6A4F] text-sm mb-2">Expert Tip</h4>
-        <p className="text-xs text-green-700 dark:text-green-300 leading-relaxed">
-          Your soil is slightly {state.soil.ph < 7 ? 'acidic' : 'alkaline'}. Consider adding {state.soil.ph < 7 ? 'lime' : 'gypsum'} to balance it for better wheat yield.
-        </p>
+      {/* Main Soil Card */}
+      <div className="card-bg p-8 relative overflow-hidden">
+        <div className="relative z-10 grid grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.ph}</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-5xl font-display font-bold text-primary">{state.soil.ph.toFixed(1)}</h3>
+                <span className="text-xs font-bold text-secondary">Level</span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.soil_texture}</p>
+              <h4 className="text-xl font-bold text-text">{state.soil.texture}</h4>
+            </div>
+          </div>
+          
+          <div className="flex flex-col justify-center items-center gap-4">
+            <div className="relative w-32 h-32">
+              <svg className="w-full h-full -rotate-90">
+                <circle cx="64" cy="64" r="58" fill="none" stroke="currentColor" strokeWidth="12" className="text-gray-100 dark:text-gray-800" />
+                <circle 
+                  cx="64" 
+                  cy="64" 
+                  r="58" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="12" 
+                  strokeDasharray={364}
+                  strokeDashoffset={364 - (364 * state.soil.ph) / 14}
+                  className="text-primary"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-[10px] font-bold text-secondary uppercase">pH Scale</span>
+                <span className="text-lg font-bold">14.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Background Decoration */}
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
       </div>
+
+      {/* Soil Composition Grid */}
+      <div className="grid grid-cols-3 gap-4">
+        <SoilStatCard label={t.sand} value={`${state.soil.sand}%`} color="bg-amber-500" />
+        <SoilStatCard label={t.silt} value={`${state.soil.silt}%`} color="bg-orange-500" />
+        <SoilStatCard label={t.clay} value={`${state.soil.clay}%`} color="bg-red-500" />
+      </div>
+
+      {/* Organic Carbon & Nitrogen */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="card-bg p-5 space-y-3">
+          <div className="flex items-center gap-2 text-primary">
+            <Database size={16} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">{t.soc}</span>
+          </div>
+          <h4 className="text-2xl font-display font-bold">{state.soil.soc} <span className="text-xs font-sans font-medium text-secondary">g/kg</span></h4>
+        </div>
+        <div className="card-bg p-5 space-y-3">
+          <div className="flex items-center gap-2 text-primary">
+            <Droplets size={16} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Nitrogen</span>
+          </div>
+          <h4 className="text-2xl font-display font-bold">{state.soil.nitrogen} <span className="text-xs font-sans font-medium text-secondary">mg/kg</span></h4>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SoilStatCard({ label, value, color }: { label: string, value: string, color: string }) {
+  return (
+    <div className="card-bg p-4 text-center space-y-2">
+      <div className={cn("w-2 h-2 rounded-full mx-auto", color)} />
+      <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{label}</p>
+      <h4 className="text-lg font-display font-bold">{value}</h4>
     </div>
   );
 }
@@ -691,62 +778,31 @@ function Gauge({ label, value, max, unit, color }: { label: string, value: numbe
 }
 
 function RotationFlowchart({ previousCrop, nextCrop, language }: { previousCrop: any, nextCrop: any, language: string }) {
-  const getIcon = (group: string) => {
-    switch (group) {
-      case 'cereal': return <Database size={16} />;
-      case 'legume':
-      case 'pulse': return <Droplets size={16} />;
-      case 'vegetable': return <Sprout size={16} />;
-      case 'oilseed': return <Sparkles size={16} />;
-      case 'millet': return <Database size={16} />;
-      default: return <Sprout size={16} />;
-    }
-  };
-
-  const getThirdCrop = (group: string) => {
-    if (group === 'legume' || group === 'pulse') return CROPS.find(c => c.rotationGroup === 'oilseed') || CROPS.find(c => c.rotationGroup === 'cereal');
-    if (group === 'cereal' || group === 'millet') return CROPS.find(c => c.rotationGroup === 'vegetable') || CROPS.find(c => c.rotationGroup === 'legume' || c.rotationGroup === 'pulse');
-    if (group === 'vegetable') return CROPS.find(c => c.rotationGroup === 'legume' || c.rotationGroup === 'pulse') || CROPS.find(c => c.rotationGroup === 'cereal');
-    return CROPS.find(c => c.rotationGroup === 'legume' || c.rotationGroup === 'pulse') || CROPS.find(c => c.rotationGroup === 'cereal');
-  };
-
-  const thirdCrop = getThirdCrop(nextCrop.rotationGroup);
-
   return (
-    <div className="flex items-center justify-between py-4 px-2">
-      <div className="flex flex-col items-center gap-2 w-20 text-center">
-        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-900 flex items-center justify-center text-gray-500 dark:text-slate-400 border-2 border-dashed border-gray-300 dark:border-slate-800">
-          {previousCrop ? getIcon(previousCrop.rotationGroup) : <Search size={16} />}
+    <div className="flex items-center justify-center gap-4 py-4">
+      <div className="flex flex-col items-center gap-2">
+        <div className="w-14 h-14 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center text-secondary shadow-sm border border-border/50">
+          <Sprout size={28} />
         </div>
-        <span className="text-[9px] font-bold text-gray-500 dark:text-slate-400 uppercase truncate w-full">
-          {previousCrop ? (previousCrop.name[language] || previousCrop.name.en) : 'Previous'}
-        </span>
+        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{previousCrop?.name[language] || previousCrop?.name.en || 'Previous'}</span>
       </div>
-
-      <ArrowRight size={16} className="text-gray-300 dark:text-slate-700" />
-
-      <div className="flex flex-col items-center gap-2 w-24 text-center">
+      
+      <div className="flex flex-col items-center gap-1">
         <motion.div 
-          animate={{ scale: [1, 1.1, 1] }}
+          animate={{ x: [0, 5, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-[#2D6A4F] border-2 border-[#2D6A4F]"
+          className="text-primary"
         >
-          {getIcon(nextCrop.rotationGroup)}
+          <ArrowRight size={24} />
         </motion.div>
-        <span className="text-[10px] font-bold text-[#2D6A4F] uppercase">
-          {nextCrop.name[language] || nextCrop.name.en}
-        </span>
+        <div className="h-0.5 w-12 bg-gradient-to-r from-secondary/20 via-primary/40 to-primary/20 rounded-full" />
       </div>
 
-      <ArrowRight size={16} className="text-gray-300 dark:text-slate-700" />
-
-      <div className="flex flex-col items-center gap-2 w-20 text-center opacity-50">
-        <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 border-2 border-blue-100 dark:border-blue-900/40">
-          {thirdCrop ? getIcon(thirdCrop.rotationGroup) : <Sprout size={16} />}
+      <div className="flex flex-col items-center gap-2">
+        <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+          <Sprout size={28} />
         </div>
-        <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase truncate w-full">
-          {thirdCrop ? (thirdCrop.name[language] || thirdCrop.name.en) : 'Future'}
-        </span>
+        <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{nextCrop.name[language] || nextCrop.name.en}</span>
       </div>
     </div>
   );
@@ -777,8 +833,7 @@ const calculateCropScore = (crop: any, soil: SoilData | null, weather: WeatherDa
   
   return Math.min(Math.max(score, 40), 100);
 };
-
-function CropCompareModal({ crops, onClose, state, t }: { crops: Crop[], onClose: () => void, state: AppState, t: any }) {
+function CropCompareModal({ crops, onClose, state, t }: { crops: any[], onClose: () => void, state: AppState, t: any }) {
   const getMonthName = (month: number) => {
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -799,62 +854,87 @@ function CropCompareModal({ crops, onClose, state, t }: { crops: Crop[], onClose
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        className="card-bg w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-[#2D6A4F] to-[#1B4332] text-white">
+        <div className="p-8 border-b border-border/50 flex items-center justify-between bg-primary/5">
           <div>
-            <h3 className="text-xl font-bold">{t.compare_crops}</h3>
-            <p className="text-xs opacity-80">{t.select_up_to_2}</p>
+            <h3 className="text-2xl font-bold text-text">Crop Comparison</h3>
+            <p className="text-xs text-secondary font-medium mt-1 uppercase tracking-wider">Side-by-side analysis</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-            <X size={24} />
+          <button 
+            onClick={onClose}
+            className="p-3 bg-white dark:bg-gray-800 rounded-2xl text-secondary hover:text-text transition-colors shadow-sm"
+          >
+            <X size={20} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-2 gap-6 relative">
-            {/* Divider */}
-            <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-gray-100 dark:bg-slate-800 hidden sm:block"></div>
-
+        <div className="p-8 overflow-y-auto max-h-[70vh]">
+          <div className="grid grid-cols-2 gap-8">
             {crops.map((crop, idx) => {
               const score = calculateCropScore(crop, state.soil, state.weather);
               return (
-                <div key={crop.id} className="space-y-6">
-                  <div className="flex flex-col items-center text-center space-y-3">
-                    <div className="w-16 h-16 bg-green-50 dark:bg-green-900/20 rounded-2xl flex items-center justify-center text-[#2D6A4F] border border-green-100 dark:border-green-800/30">
-                      <Sprout size={32} />
+                <div key={crop.id} className="space-y-8">
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <div className={cn(
+                      "w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg",
+                      idx === 0 ? "bg-primary text-white shadow-primary/20" : "bg-amber-500 text-white shadow-amber-500/20"
+                    )}>
+                      <Sprout size={40} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-lg text-gray-800 dark:text-slate-100">
-                        {crop.name[state.language] || crop.name.en}
-                      </h4>
+                      <h4 className="text-lg font-bold text-text">{crop.name[state.language] || crop.name.en}</h4>
                       <div className="flex items-center justify-center gap-2 mt-1">
-                        <div className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-[10px] font-bold">
+                        <span className={cn("text-sm font-display font-bold", idx === 0 ? "text-primary" : "text-amber-500")}>
                           {score}% Match
-                        </div>
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <CompareItem label={t.soil_type} value={crop.soilType[state.language] || crop.soilType.en} icon={<Database size={14} />} />
-                    <CompareItem label={t.ph_range} value={`${crop.minPh} - ${crop.maxPh}`} icon={<Droplets size={14} />} />
-                    <CompareItem label={t.temp_range} value={`${crop.minTemp}°C - ${crop.maxTemp}°C`} icon={<Thermometer size={14} />} />
-                    <CompareItem label={t.water_needs} value={crop.waterRequirement} icon={<Droplets size={14} />} />
-                    <CompareItem label={t.sowing_time} value={crop.sowingMonths.map(getMonthName).join(', ')} icon={<Calendar size={14} />} />
-                    <CompareItem label={t.yield_potential} value={crop.yieldPotential[state.language] || crop.yieldPotential.en} icon={<Award size={14} />} />
+                  <div className="space-y-6">
+                    <CompareItem 
+                      label="Soil Type" 
+                      value={crop.soilType[state.language] || crop.soilType.en} 
+                      icon={<Database size={14} />} 
+                    />
+                    <CompareItem 
+                      label="pH Range" 
+                      value={`${crop.minPh} - ${crop.maxPh}`} 
+                      icon={<Activity size={14} />} 
+                    />
+                    <CompareItem 
+                      label="Temp Range" 
+                      value={`${crop.minTemp}°C - ${crop.maxTemp}°C`} 
+                      icon={<Thermometer size={14} />} 
+                    />
+                    <CompareItem 
+                      label="Water Needs" 
+                      value={crop.waterRequirement} 
+                      icon={<Droplets size={14} />} 
+                    />
+                    <CompareItem 
+                      label="Sowing Time" 
+                      value={crop.sowingMonths.map(getMonthName).join(', ')} 
+                      icon={<Calendar size={14} />} 
+                    />
+                    <CompareItem 
+                      label="Yield Potential" 
+                      value={crop.yieldPotential[state.language] || crop.yieldPotential.en} 
+                      icon={<Award size={14} />} 
+                    />
                   </div>
                 </div>
               );
             })}
 
             {crops.length < 2 && (
-              <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-gray-100 dark:border-slate-800 rounded-2xl space-y-3 opacity-50">
-                <div className="w-12 h-12 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-gray-400">
-                  <Plus size={24} />
+              <div className="flex flex-col items-center justify-center text-center p-12 border-2 border-dashed border-border/50 rounded-[2rem] space-y-4 opacity-50">
+                <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center text-secondary">
+                  <Plus size={32} />
                 </div>
-                <p className="text-xs text-gray-400">Select another crop to compare</p>
+                <p className="text-sm font-medium text-secondary">Select another crop to compare</p>
               </div>
             )}
           </div>
@@ -866,35 +946,31 @@ function CropCompareModal({ crops, onClose, state, t }: { crops: Crop[], onClose
 
 function CompareItem({ label, value, icon }: { label: string, value: string, icon: React.ReactNode }) {
   return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-        {icon}
+    <div className="space-y-2 bg-gray-50/50 dark:bg-gray-800/50 p-4 rounded-2xl border border-border/30">
+      <div className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest">
+        <span className="text-primary">{icon}</span>
         {label}
       </div>
-      <p className="text-xs font-bold text-gray-800 dark:text-slate-100 leading-snug">{value}</p>
+      <p className="text-sm font-bold text-text leading-snug">{value}</p>
     </div>
   );
 }
 
-function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any, onPreviousCropChange: (id: string) => void }) {
+function CropsView({ state, t, onPreviousCropChange, setActiveCropId }: { state: AppState, t: any, onPreviousCropChange: (id: string) => void, setActiveCropId: (id: string | null) => void }) {
   const [expandedCropId, setExpandedCropId] = useState<string | null>(null);
   const [compareCropIds, setCompareCropIds] = useState<string[]>([]);
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
 
-  const topCrops = [...CROPS]
-    .map(crop => ({
-      crop,
-      score: calculateCropScore(crop, state.soil, state.weather)
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
-
   const toggleCompare = (id: string) => {
-    setCompareCropIds(prev => {
-      if (prev.includes(id)) return prev.filter(i => i !== id);
-      if (prev.length >= 2) return [prev[1], id];
-      return [...prev, id];
-    });
+    setCompareCropIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : prev.length < 2 ? [...prev, id] : prev
+    );
+  };
+
+  const handleExpand = (id: string) => {
+    const newId = expandedCropId === id ? null : id;
+    setExpandedCropId(newId);
+    setActiveCropId(newId);
   };
 
   const getMonthName = (month: number) => {
@@ -905,97 +981,48 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
     return months[month - 1];
   };
 
-  const getRotationAdvice = () => {
-    if (!state.previousCropId) {
-      return {
-        nextCrop: CROPS.find(c => c.id === 'wheat'),
-        reason: t.no_previous_data,
-        benefit: t.cereal_benefit
-      };
-    }
+  const advice = getRotationAdvice(state.previousCropId, state.language);
 
-    const previousCrop = CROPS.find(c => c.id === state.previousCropId);
-    if (!previousCrop) return null;
-
-    let suggested: any = null;
-    let benefit = '';
-
-    const isLegume = (group: string) => group === 'legume' || group === 'pulse';
-
-    if (previousCrop.rotationGroup === 'cereal' || previousCrop.rotationGroup === 'millet') {
-      // After cereals/millets, plant legumes to fix nitrogen
-      suggested = CROPS.find(c => isLegume(c.rotationGroup) && c.id !== previousCrop.id) || 
-                  CROPS.find(c => c.rotationGroup === 'oilseed' && c.id !== previousCrop.id);
-      benefit = t.legume_benefit;
-    } else if (isLegume(previousCrop.rotationGroup)) {
-      // After legumes, plant cereals to use the nitrogen
-      suggested = CROPS.find(c => c.rotationGroup === 'cereal' && c.id !== previousCrop.id) || 
-                  CROPS.find(c => c.rotationGroup === 'millet' && c.id !== previousCrop.id);
-      benefit = t.cereal_benefit;
-    } else if (previousCrop.rotationGroup === 'vegetable') {
-      // After vegetables, plant pulses or cereals to break pest cycles
-      suggested = CROPS.find(c => c.rotationGroup === 'pulse' && c.id !== previousCrop.id) || 
-                  CROPS.find(c => c.rotationGroup === 'cereal' && c.id !== previousCrop.id);
-      benefit = t.pulse_benefit;
-    } else if (previousCrop.rotationGroup === 'oilseed') {
-      // After oilseeds, plant cereals or vegetables
-      suggested = CROPS.find(c => c.rotationGroup === 'cereal' && c.id !== previousCrop.id) || 
-                  CROPS.find(c => c.rotationGroup === 'vegetable' && c.id !== previousCrop.id);
-      benefit = t.cereal_benefit;
-    } else {
-      suggested = CROPS.find(c => isLegume(c.rotationGroup) && c.id !== previousCrop.id) || 
-                  CROPS.find(c => c.rotationGroup === 'cereal' && c.id !== previousCrop.id);
-      benefit = t.legume_benefit;
-    }
-
-    // Fallback if no crop found (should not happen with current data)
-    if (!suggested) {
-      suggested = CROPS.find(c => c.id === 'wheat');
-    }
-
-    return {
-      nextCrop: suggested,
-      reason: t.rotation_reason,
-      benefit: benefit
-    };
-  };
-
-  const advice = getRotationAdvice();
+  const topCrops = [...CROPS]
+    .map(crop => ({
+      crop,
+      score: calculateCropScore(crop, state.soil, state.weather)
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
 
   return (
-    <div className="space-y-8">
-      {/* Rotation Advisor Section */}
-      <div className="bg-[#2D6A4F]/5 border border-[#2D6A4F]/10 rounded-2xl p-6 space-y-4">
-        <div className="flex items-center gap-2 text-[#2D6A4F]">
-          <Database size={20} />
-          <h3 className="font-bold text-lg">{t.crop_rotation}</h3>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h2 className="text-2xl font-bold text-text">{t.crop_advisor}</h2>
+          <p className="text-xs text-secondary font-medium mt-1 uppercase tracking-wider">Smart Recommendations</p>
         </div>
-
-        <div className="bg-white/50 dark:bg-black/20 rounded-xl p-4 border border-[#2D6A4F]/10 space-y-2">
-          <h4 className="text-sm font-bold text-[#2D6A4F] flex items-center gap-2">
-            <Info size={16} />
-            {t.rotation_importance_title}
-          </h4>
-          <p className="text-xs text-gray-600 leading-relaxed">
-            {t.rotation_importance_desc}
-          </p>
-          <a 
-            href="https://en.wikipedia.org/wiki/Crop_rotation" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[10px] font-bold text-[#2D6A4F] hover:underline"
+        {compareCropIds.length > 0 && (
+          <button 
+            onClick={() => setIsCompareModalOpen(true)}
+            className="btn-primary text-xs flex items-center gap-2"
           >
-            {t.learn_more} <ExternalLink size={10} />
-          </a>
-        </div>
+            <Scale size={16} />
+            Compare ({compareCropIds.length}/2)
+          </button>
+        )}
+      </div>
 
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase">{t.select_previous_crop}</label>
+      {/* Rotation Advisor Section */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 text-primary px-1">
+          <RefreshCw size={20} />
+          <h3 className="text-lg font-bold">{t.crop_rotation}</h3>
+        </div>
+        
+        <div className="card-bg p-6 space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.select_previous_crop}</label>
             <select 
               value={state.previousCropId}
               onChange={(e) => onPreviousCropChange(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2D6A4F]/20 outline-none text-gray-800 dark:text-slate-100"
+              className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             >
               <option value="">-- Select --</option>
               {CROPS.map(c => (
@@ -1008,11 +1035,14 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="card-bg p-4 rounded-xl border border-[#2D6A4F]/20 shadow-sm space-y-3"
+              className="bg-primary/5 rounded-[2rem] p-6 space-y-6 border border-primary/10"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider">{t.suggested_next}</span>
-                <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full font-bold uppercase">Recommended</span>
+                <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{t.suggested_next}</span>
+                <div className="flex items-center gap-1 text-[10px] font-bold text-primary">
+                  <Sparkles size={12} />
+                  RECOMMENDED
+                </div>
               </div>
               
               <RotationFlowchart 
@@ -1021,179 +1051,165 @@ function CropsView({ state, t, onPreviousCropChange }: { state: AppState, t: any
                 language={state.language}
               />
 
-              <div className="flex items-center gap-3 border-t border-gray-50 dark:border-slate-800 pt-3">
-                <div className="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center text-[#2D6A4F]">
-                  <Sprout size={20} />
+              <div className="flex items-center gap-4 border-t border-primary/10 pt-6">
+                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center text-primary shadow-sm">
+                  <Sprout size={24} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-800 dark:text-slate-100">{advice.nextCrop.name[state.language] || advice.nextCrop.name.en}</h4>
-                  <p className="text-[10px] text-gray-500 dark:text-slate-400">{advice.reason}</p>
+                  <h4 className="font-bold text-text">{advice.nextCrop.name[state.language] || advice.nextCrop.name.en}</h4>
+                  <p className="text-[10px] text-secondary font-medium mt-0.5">{advice.reason}</p>
                 </div>
               </div>
-              <p className="text-xs text-gray-600 dark:text-slate-400 italic leading-relaxed border-t border-gray-50 dark:border-slate-800 pt-2">
+              <p className="text-xs text-primary font-medium italic leading-relaxed bg-white/50 dark:bg-black/20 p-4 rounded-2xl">
                 "{advice.benefit}"
               </p>
             </motion.div>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* Top Recommendations Section */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-[#2D6A4F]">
+      {/* Top Recommendations */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 text-amber-500 px-1">
           <Award size={20} />
-          <h3 className="font-bold text-lg">{t.top_recommendations}</h3>
+          <h3 className="text-lg font-bold">{t.top_recommendations}</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {topCrops.map(({ crop, score }, index) => (
             <motion.div
               key={`top-${crop.id}`}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="card-bg p-4 rounded-2xl border border-[#2D6A4F]/20 shadow-sm relative overflow-hidden group cursor-pointer"
-              onClick={() => setExpandedCropId(crop.id)}
+              whileHover={{ y: -4 }}
+              className="card-bg p-6 rounded-[2rem] text-center space-y-4 relative overflow-hidden group cursor-pointer border border-transparent hover:border-amber-500/30 transition-all"
+              onClick={() => handleExpand(crop.id)}
             >
-              <div className="absolute top-0 right-0 p-2">
-                <div className="bg-[#2D6A4F] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
+              <div className="absolute top-0 right-0 p-3">
+                <div className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg">
                   #{index + 1}
                 </div>
               </div>
-              <div className="flex flex-col items-center text-center space-y-3">
-                <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center text-[#2D6A4F] group-hover:scale-110 transition-transform">
-                  <Sprout size={24} />
+              <div className="w-16 h-16 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center text-amber-500 mx-auto group-hover:scale-110 transition-transform">
+                <Sprout size={32} />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm text-balance">
+                  {crop.name[state.language] || crop.name.en}
+                </h4>
+                <div className="flex items-center justify-center gap-1">
+                  <span className="text-lg font-display font-bold text-amber-500">{score}%</span>
+                  <span className="text-[10px] font-bold text-secondary uppercase tracking-tight">Match</span>
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm text-gray-800 dark:text-slate-100 line-clamp-1">
-                    {crop.name[state.language] || crop.name.en}
-                  </h4>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    <span className="text-[10px] font-bold text-[#2D6A4F]">{score}%</span>
-                    <span className="text-[10px] text-gray-400 uppercase tracking-tight">{t.soil_match}</span>
-                  </div>
-                </div>
-                <div className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-[#2D6A4F]" 
-                    style={{ width: `${score}%` }}
-                  ></div>
-                </div>
+              </div>
+              <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${score}%` }}
+                  className="h-full bg-amber-500"
+                />
               </div>
             </motion.div>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t.crop_advisor}</h2>
-          {compareCropIds.length > 0 && (
-            <button 
-              onClick={() => setIsCompareModalOpen(true)}
-              className="flex items-center gap-2 bg-[#2D6A4F] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg active:scale-95 transition-all"
-            >
-              <Scale size={16} />
-              Compare ({compareCropIds.length}/2)
-            </button>
-          )}
-        </div>
-        {CROPS.map(crop => {
-          const score = calculateCropScore(crop, state.soil, state.weather);
-          const isExpanded = expandedCropId === crop.id;
-          const isComparing = compareCropIds.includes(crop.id);
-          return (
-            <div key={crop.id} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden transition-colors duration-300">
-              <div 
-                className="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50 dark:active:bg-slate-900 transition-colors"
-                onClick={() => setExpandedCropId(isExpanded ? null : crop.id)}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-gray-100 dark:border-slate-700 bg-green-50 dark:bg-green-900/20 text-[#2D6A4F]">
-                    <Sprout size={24} />
+      {/* All Crops List */}
+      <section className="space-y-4">
+        <h3 className="text-lg font-bold px-1">All Crops</h3>
+        <div className="space-y-4">
+          {CROPS.map(crop => {
+            const score = calculateCropScore(crop, state.soil, state.weather);
+            const isExpanded = expandedCropId === crop.id;
+            const isComparing = compareCropIds.includes(crop.id);
+            return (
+              <div key={crop.id} className="card-bg rounded-[2rem] overflow-hidden group hover:border-primary/30 transition-all">
+                <div 
+                  className="p-6 flex items-center justify-between cursor-pointer active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
+                  onClick={() => handleExpand(crop.id)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                      <Sprout size={28} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-text">{crop.name[state.language] || crop.name.en}</h4>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{crop.waterRequirement} Water</span>
+                        <div className="w-1 h-1 rounded-full bg-secondary/30" />
+                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{score}% Match</span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-gray-800 dark:text-slate-100">{crop.name[state.language] || crop.name.en}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-gray-400 font-medium">{t.water_need}: {crop.waterRequirement}</span>
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCompare(crop.id);
+                      }}
+                      className={cn(
+                        "p-3 rounded-xl border transition-all active:scale-90",
+                        isComparing 
+                          ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
+                          : "bg-gray-50 dark:bg-gray-800 border-transparent text-secondary"
+                      )}
+                    >
+                      <Scale size={18} />
+                    </button>
+                    <div className="text-secondary">
+                      {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleCompare(crop.id);
-                    }}
-                    className={cn(
-                      "p-2 rounded-lg border transition-all active:scale-90",
-                      isComparing 
-                        ? "bg-green-600 border-green-600 text-white" 
-                        : "bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-400"
-                    )}
-                  >
-                    <Scale size={16} />
-                  </button>
-                  <div className="text-right">
-                    <div className="text-xs font-bold text-[#2D6A4F] mb-1">{score}% Match</div>
-                    <div className="w-16 h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#2D6A4F]" style={{ width: `${score}%` }}></div>
-                    </div>
-                  </div>
-                  <div className="text-gray-400">
-                    {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                  </div>
-                </div>
+                
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="border-t border-border/50 bg-gray-50/30 dark:bg-gray-800/30"
+                    >
+                      <div className="p-8 space-y-8">
+                        <div className="space-y-3">
+                          <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Description</span>
+                          <p className="text-sm text-secondary leading-relaxed">
+                            {crop.description[state.language] || crop.description.en}
+                          </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-8">
+                          <div className="space-y-2">
+                            <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.sowing_time}</span>
+                            <p className="text-sm font-bold text-text">
+                              {crop.sowingMonths.map(getMonthName).join(', ')}
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Soil Suitability</span>
+                            <p className="text-sm font-bold text-text">
+                              {crop.soilType[state.language] || crop.soilType.en}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="card-bg p-4 rounded-2xl border border-border/50">
+                            <span className="text-[10px] font-bold text-secondary uppercase tracking-widest block mb-2">Ideal pH</span>
+                            <span className="text-lg font-display font-bold text-primary">{crop.minPh} - {crop.maxPh}</span>
+                          </div>
+                          <div className="card-bg p-4 rounded-2xl border border-border/50">
+                            <span className="text-[10px] font-bold text-secondary uppercase tracking-widest block mb-2">Ideal Temp</span>
+                            <span className="text-lg font-display font-bold text-orange-500">{crop.minTemp}°C - {crop.maxTemp}°C</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="border-t border-gray-50 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50"
-                  >
-                    <div className="p-4 space-y-4">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Description</span>
-                        <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
-                          {crop.description[state.language] || crop.description.en}
-                        </p>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{t.sowing_time}</span>
-                          <p className="text-xs font-bold text-gray-800 dark:text-slate-100">
-                            {crop.sowingMonths.map(getMonthName).join(', ')}
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Soil Suitability</span>
-                          <p className="text-xs font-bold text-gray-800 dark:text-slate-100">
-                            {crop.soilType[state.language] || crop.soilType.en}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-4 pt-2">
-                        <div className="flex-1 card-bg p-2 rounded-lg border border-gray-100 dark:border-slate-800">
-                          <span className="text-[10px] text-gray-400 block mb-1">Ideal pH</span>
-                          <span className="text-xs font-bold text-[#2D6A4F]">{crop.minPh} - {crop.maxPh}</span>
-                        </div>
-                        <div className="flex-1 card-bg p-2 rounded-lg border border-gray-100 dark:border-slate-800">
-                          <span className="text-[10px] text-gray-400 block mb-1">Ideal Temp</span>
-                          <span className="text-xs font-bold text-orange-600">{crop.minTemp}°C - {crop.maxTemp}°C</span>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </section>
+
       <AnimatePresence>
         {isCompareModalOpen && (
           <CropCompareModal 
@@ -1234,143 +1250,130 @@ function WeatherView({ state, t, onRefresh }: { state: AppState, t: any, onRefre
   if (!state.weather) return <LoadingScreen />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t.weather}</h2>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h2 className="text-2xl font-bold text-text">{t.weather}</h2>
+          <p className="text-xs text-secondary font-medium mt-1 uppercase tracking-wider">Local Forecast</p>
+        </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={onRefresh}
             disabled={state.isRefreshing}
-            className={cn("p-2 rounded-lg card-bg text-gray-600 dark:text-slate-400 active:scale-95 transition-all", state.isRefreshing && "animate-spin")}
+            className={cn("p-2.5 rounded-xl card-bg text-secondary hover:text-primary active:scale-95 transition-all", state.isRefreshing && "animate-spin")}
           >
-            <CloudSun size={16} />
+            <CloudSun size={18} />
           </button>
-          {state.weather.isEstimated && (
-            <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold">
-              ESTIMATED
-            </span>
-          )}
         </div>
       </div>
-      
-      {state.weather.isEstimated && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 p-3 rounded-xl flex items-center justify-between gap-2 text-amber-800 dark:text-amber-200 text-[10px] leading-tight">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={14} className="shrink-0" />
-            Weather service is currently busy. Showing estimated values.
-          </div>
-          <button 
-            onClick={onRefresh}
-            className="shrink-0 bg-amber-600 text-white px-2 py-1 rounded font-bold uppercase"
-          >
-            {t.retry}
-          </button>
-        </div>
-      )}
 
-      <div className="card-bg rounded-2xl p-6 shadow-sm transition-colors duration-300">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <div className="text-4xl font-bold text-gray-800 dark:text-slate-100">{state.weather.temp.toFixed(0)}°C</div>
-            <div className="text-sm text-gray-500 dark:text-slate-400 capitalize mt-1">{state.weather.description}</div>
+      {/* Main Weather Card */}
+      <div className="card-bg p-8 relative overflow-hidden">
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.today}</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-6xl font-display font-bold text-primary">{state.weather.temp.toFixed(0)}°</h3>
+                <span className="text-lg font-bold text-secondary">C</span>
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest">
+              {state.weather.description}
+            </div>
           </div>
-          <WeatherImage 
-            src={`https://openweathermap.org/img/wn/${state.weather.icon}@2x.png`} 
-            alt={`Current weather: ${state.weather.description}`} 
-            className="w-20 h-20"
-          />
+          
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+            <WeatherImage 
+              src={`https://openweathermap.org/img/wn/${state.weather.icon}@4x.png`} 
+              alt={state.weather.description} 
+              className="w-32 h-32 relative z-10 drop-shadow-2xl"
+            />
+          </div>
         </div>
-
-        <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border">
+        
+        <div className="grid grid-cols-3 gap-4 mt-10 pt-8 border-t border-border/50">
           <WeatherStat icon={<Droplets size={16} />} label="Humidity" value={`${state.weather.humidity}%`} />
           <WeatherStat icon={<Wind size={16} />} label="Wind" value={`${state.weather.windSpeed} km/h`} />
-          <WeatherStat icon={<CloudSun size={16} />} label="Rain" value={`${state.weather.rain} mm`} />
+          <WeatherStat icon={<CloudRain size={16} />} label="Rain" value={`${state.weather.rain} mm`} />
         </div>
       </div>
 
-      {/* Weather Map View */}
+      {/* Weather Map */}
       {state.location && (
-        <div className="card-bg rounded-2xl p-6 shadow-sm space-y-4 transition-colors duration-300">
-          <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 border-b border-border pb-2">
-            {t.weather_map}
-          </h3>
-          <WeatherMap 
-            lat={state.location.lat} 
-            lng={state.location.lng} 
-            locationName={state.location.name} 
-          />
-        </div>
+        <section className="space-y-4">
+          <h3 className="text-lg font-bold px-1">{t.weather_map}</h3>
+          <div className="card-bg p-2 rounded-[2rem] overflow-hidden">
+            <WeatherMap 
+              lat={state.location.lat} 
+              lng={state.location.lng} 
+              locationName={state.location.name} 
+            />
+          </div>
+        </section>
       )}
 
       {/* Hourly Forecast */}
       {state.weather.hourly && state.weather.hourly.length > 0 && (
-        <div className="card-bg rounded-2xl p-6 shadow-sm space-y-4 transition-colors duration-300 overflow-hidden">
-          <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 border-b border-border pb-2">{t.hourly_forecast}</h3>
-          <div className="flex overflow-x-auto pb-2 gap-4 scrollbar-hide">
+        <section className="space-y-4">
+          <h3 className="text-lg font-bold px-1">{t.hourly_forecast}</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-1">
             {state.weather.hourly.map((hour, i) => (
-              <div key={i} className="flex flex-col items-center min-w-[60px] space-y-2">
-                <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium">
+              <div key={i} className="min-w-[80px] card-bg p-4 flex flex-col items-center gap-3">
+                <span className="text-[10px] font-bold text-secondary">
                   {new Date(hour.time).getHours()}:00
                 </span>
                 <WeatherImage 
                   src={`https://openweathermap.org/img/wn/${hour.icon}.png`} 
                   alt={hour.description} 
-                  className="w-8 h-8 rounded-full shadow-sm bg-blue-50/50 dark:bg-blue-900/10"
+                  className="w-10 h-10"
                 />
-                <span className="text-sm font-bold text-gray-800 dark:text-slate-100">{hour.temp.toFixed(0)}°</span>
-                <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold">{hour.rainProb}%</span>
+                <span className="text-sm font-bold">{hour.temp.toFixed(0)}°</span>
+                <div className="flex items-center gap-1 text-[9px] font-bold text-blue-500">
+                  <Droplets size={8} />
+                  {hour.rainProb}%
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Weekly Forecast */}
       {state.weather.forecast && state.weather.forecast.length > 0 && (
-        <div className="card-bg rounded-2xl p-6 shadow-sm space-y-4 transition-colors duration-300">
-          <h3 className="text-sm font-bold text-gray-800 dark:text-slate-100 border-b border-border pb-2">{t.weekly_forecast || t.forecast_7day}</h3>
-          <div className="space-y-4">
+        <section className="space-y-4">
+          <h3 className="text-lg font-bold px-1">{t.weekly_forecast}</h3>
+          <div className="card-bg divide-y divide-border/50">
             {state.weather.forecast.map((day, i) => (
-              <div key={day.date} className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-slate-800 last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center text-blue-600">
+              <div key={day.date} className="flex items-center justify-between p-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
                     <WeatherImage 
                       src={`https://openweathermap.org/img/wn/${day.icon}.png`} 
-                      alt={`Forecast for ${new Date(day.date).toLocaleDateString()}: ${day.description}`} 
+                      alt={day.description} 
                       className="w-8 h-8"
                     />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-gray-800 dark:text-slate-100">
-                      {i === 0 ? t.today : new Date(day.date).toLocaleDateString(state.language === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'short' })}
-                    </div>
-                    <div className="text-[10px] text-gray-500 dark:text-slate-400 capitalize">{day.description}</div>
+                    <p className="text-sm font-bold">
+                      {i === 0 ? t.today : new Date(day.date).toLocaleDateString(state.language === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'long' })}
+                    </p>
+                    <p className="text-[10px] font-medium text-secondary capitalize">{day.description}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <div className="text-xs font-bold text-gray-800 dark:text-slate-100">{day.high.toFixed(0)}° / {day.low.toFixed(0)}°</div>
-                    <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium">{t.high_low}</div>
-                  </div>
-                  <div className="text-right min-w-[60px]">
-                    <div className="text-xs font-bold text-blue-600 dark:text-blue-400">{day.rainProb}%</div>
-                    <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium">{t.rain_prob}</div>
+                <div className="text-right space-y-1">
+                  <p className="text-sm font-bold text-primary">{day.high.toFixed(0)}° <span className="text-secondary font-medium">/ {day.low.toFixed(0)}°</span></p>
+                  <div className="flex items-center justify-end gap-1 text-[9px] font-bold text-blue-500">
+                    <Droplets size={8} />
+                    {day.rainProb}%
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
-
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 p-4 rounded-xl">
-        <h4 className="font-bold text-blue-800 dark:text-blue-200 text-sm mb-2">Irrigation Advice</h4>
-        <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-          {state.weather.rain > 0 
-            ? "Rain detected. Skip irrigation for today to save water." 
-            : "No rain expected. Ensure regular watering for Rabi crops."}
-        </p>
-      </div>
     </div>
   );
 }
@@ -1416,37 +1419,35 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
   };
 
   return (
-    <div className="space-y-6 pb-10">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t.disease_library}</h2>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h2 className="text-2xl font-bold text-text">{t.disease_library}</h2>
+          <p className="text-xs text-secondary font-medium mt-1 uppercase tracking-wider">Diagnosis & Treatment</p>
+        </div>
         <button 
           onClick={() => setIsFilterOpen(!isFilterOpen)}
           className={cn(
-            "p-2 rounded-xl transition-all duration-300 flex items-center gap-2 text-xs font-bold",
+            "p-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 text-xs font-bold",
             isFilterOpen || selectedCrops.length > 0 || selectedSeverities.length > 0
-              ? "bg-[#2D6A4F] text-white shadow-md shadow-[#2D6A4F]/20" 
-              : "card-bg text-gray-500 border border-gray-100 dark:border-slate-800"
+              ? "bg-primary text-white shadow-lg shadow-primary/20" 
+              : "card-bg text-secondary"
           )}
         >
-          <Filter size={16} />
+          <Filter size={18} />
           <span>{t.filter}</span>
-          {(selectedCrops.length > 0 || selectedSeverities.length > 0) && (
-            <span className="bg-white text-[#2D6A4F] w-4 h-4 rounded-full flex items-center justify-center text-[10px]">
-              {selectedCrops.length + selectedSeverities.length}
-            </span>
-          )}
         </button>
       </div>
 
-      <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      <div className="space-y-4 px-1">
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors" size={20} />
           <input 
             type="text" 
             placeholder="Search disease or symptoms..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full card-bg rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/20 transition-colors duration-300"
+            className="w-full card-bg rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
 
@@ -1458,10 +1459,10 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="card-bg rounded-2xl p-4 border border-gray-100 dark:border-slate-800 space-y-4 shadow-sm">
-                <div className="space-y-3">
+              <div className="card-bg rounded-[2rem] p-6 space-y-6 shadow-xl border border-primary/5">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.select_crops}</span>
+                    <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.select_crops}</span>
                     {(selectedCrops.length > 0 || selectedSeverities.length > 0) && (
                       <button 
                         onClick={() => { setSelectedCrops([]); setSelectedSeverities([]); }}
@@ -1481,10 +1482,10 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
                           key={cropId}
                           onClick={() => toggleCrop(cropId)}
                           className={cn(
-                            "px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border",
+                            "px-4 py-2 rounded-xl text-[10px] font-bold transition-all border",
                             isSelected
-                              ? "bg-[#2D6A4F] text-white border-[#2D6A4F] shadow-sm"
-                              : "card-bg text-gray-500 border-gray-100 dark:border-slate-800"
+                              ? "bg-primary text-white border-primary shadow-md"
+                              : "card-bg text-secondary border-transparent"
                           )}
                         >
                           {cropName}
@@ -1494,25 +1495,24 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t.select_severity}</span>
+                <div className="space-y-4">
+                  <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.select_severity}</span>
                   <div className="flex gap-2">
                     {severities.map(severity => {
                       const isSelected = selectedSeverities.includes(severity);
-                      const severityLabel = t[severity.toLowerCase()] || severity;
                       return (
                         <button
                           key={severity}
                           onClick={() => toggleSeverity(severity)}
                           className={cn(
-                            "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all border flex items-center justify-center gap-2",
+                            "flex-1 py-3 rounded-xl text-[10px] font-bold transition-all border flex items-center justify-center gap-2",
                             isSelected
-                              ? "bg-[#2D6A4F] text-white border-[#2D6A4F] shadow-sm"
-                              : "card-bg text-gray-500 border-gray-100 dark:border-slate-800"
+                              ? "bg-primary text-white border-primary shadow-md"
+                              : "card-bg text-secondary border-transparent"
                           )}
                         >
                           {isSelected && <Check size={12} />}
-                          {severityLabel}
+                          {severity}
                         </button>
                       );
                     })}
@@ -1526,68 +1526,68 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
 
       <div className="space-y-6">
         {filteredDiseases.map(d => (
-          <div key={d.id} className="card-bg p-5 rounded-2xl shadow-sm space-y-4 transition-colors duration-300">
+          <div key={d.id} className="card-bg p-6 space-y-6 group hover:border-primary/30 transition-all">
             <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center text-red-600">
-                  <AlertTriangle size={20} />
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600">
+                  <AlertTriangle size={24} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg text-gray-800 dark:text-slate-100">{d.name[state.language] || d.name.en}</h4>
-                  <span className="text-[10px] font-bold text-[#2D6A4F] uppercase tracking-wider">{d.crop}</span>
+                  <h4 className="font-bold text-lg">{d.name[state.language] || d.name.en}</h4>
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-0.5">{d.crop}</p>
                 </div>
               </div>
-              <span className={cn("text-[10px] px-2 py-1 rounded-full font-bold uppercase", 
-                d.severity === 'High' ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" : 
-                d.severity === 'Medium' ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400" :
-                "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+              <span className={cn("text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider", 
+                d.severity === 'High' ? "bg-red-100 text-red-600" : 
+                d.severity === 'Medium' ? "bg-amber-100 text-amber-600" :
+                "bg-blue-100 text-blue-600"
               )}>
-                {t[d.severity.toLowerCase()] || d.severity} Risk
+                {d.severity} Risk
               </span>
             </div>
             
             <div className="space-y-2">
-              <span className="text-[10px] font-bold text-gray-400 uppercase block">Symptoms</span>
-              <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">{d.symptoms[state.language] || d.symptoms.en}</p>
+              <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Symptoms</span>
+              <p className="text-xs text-secondary leading-relaxed">{d.symptoms[state.language] || d.symptoms.en}</p>
             </div>
 
-            <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-xl space-y-4 border border-green-100 dark:border-green-800/30">
-              <div className="flex items-center gap-2 text-[#2D6A4F]">
-                <Database size={16} />
-                <span className="text-xs font-bold uppercase tracking-tight">{t.treatment_steps}</span>
+            <div className="bg-primary/5 p-6 rounded-[2rem] space-y-6 border border-primary/10">
+              <div className="flex items-center gap-2 text-primary">
+                <ShieldCheck size={18} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{t.treatment_steps}</span>
               </div>
               
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-green-700/60 uppercase">{t.dosage}</span>
-                    <p className="text-xs font-bold text-green-900 dark:text-green-300">{d.dosage[state.language] || d.dosage.en}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-green-700/60 uppercase">{t.application}</span>
-                    <p className="text-xs font-bold text-green-900 dark:text-green-300">{d.application[state.language] || d.application.en}</p>
-                  </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-secondary uppercase tracking-widest opacity-60">{t.dosage}</span>
+                  <p className="text-xs font-bold text-text">{d.dosage[state.language] || d.dosage.en}</p>
                 </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-secondary uppercase tracking-widest opacity-60">{t.application}</span>
+                  <p className="text-xs font-bold text-text">{d.application[state.language] || d.application.en}</p>
+                </div>
+              </div>
 
-                <div className="space-y-2">
-                  <span className="text-[10px] font-bold text-green-700/60 uppercase">Steps</span>
-                  <ul className="space-y-1.5">
-                    {(d.steps[state.language] || d.steps.en).map((step, idx) => (
-                      <li key={idx} className="flex gap-2 text-xs text-green-800 dark:text-green-200 leading-tight">
-                        <span className="font-bold text-green-600">{idx + 1}.</span>
-                        {step}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              <div className="space-y-3">
+                <span className="text-[10px] font-bold text-secondary uppercase tracking-widest opacity-60">Action Plan</span>
+                <ul className="space-y-2">
+                  {(d.steps[state.language] || d.steps.en).map((step, idx) => (
+                    <li key={idx} className="flex gap-3 text-xs text-text leading-relaxed">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                        {idx + 1}
+                      </span>
+                      {step}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
         ))}
         {filteredDiseases.length === 0 && (
-          <div className="text-center py-10 text-gray-400">
-            <Search size={40} className="mx-auto mb-2 opacity-20" />
-            <p className="text-sm">No diseases found matching your search.</p>
+          <div className="text-center py-20">
+            <Search size={48} className="mx-auto mb-4 text-secondary opacity-20" />
+            <p className="text-secondary font-medium">No diseases found matching your search.</p>
           </div>
         )}
       </div>
@@ -1731,7 +1731,7 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
   const startListening = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Speech recognition not supported in this browser.");
+      console.warn("Speech recognition not supported in this browser.");
       return;
     }
 
