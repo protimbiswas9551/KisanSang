@@ -38,6 +38,7 @@ export default function MarketView({ state, t, onDataUpdate, onNewsUpdate, onAdd
   const [loading, setLoading] = useState(!state.marketData || !state.marketNews);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [newsSearchTerm, setNewsSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState('All');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedPrice, setSelectedPrice] = useState<MarketPrice | null>(null);
@@ -146,31 +147,56 @@ export default function MarketView({ state, t, onDataUpdate, onNewsUpdate, onAdd
 
       <div className="space-y-6 px-1">
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors" size={20} />
-            <input
-              type="text"
-              placeholder={t.search_commodity}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl card-bg border border-transparent focus:border-primary/20 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
-            />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors" size={20} />
+              <input
+                type="text"
+                placeholder={t.search_commodity}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-10 py-4 rounded-2xl card-bg border border-transparent focus:border-primary/20 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+              />
+              {searchTerm && (
+                <button 
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+            <div className="relative group">
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors" size={20} />
+              <select
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                className="w-full pl-12 pr-10 py-4 rounded-2xl card-bg border border-transparent focus:border-primary/20 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all appearance-none cursor-pointer"
+              >
+                <option value="All">{t.all_states}</option>
+                {states.filter(s => s !== 'All').map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary rotate-90 pointer-events-none" size={16} />
+            </div>
           </div>
-          <div className="relative group">
-            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors" size={20} />
-            <select
-              value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full pl-12 pr-10 py-4 rounded-2xl card-bg border border-transparent focus:border-primary/20 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all appearance-none cursor-pointer"
-            >
-              <option value="All">{t.all_states}</option>
-              {states.filter(s => s !== 'All').map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary rotate-90 pointer-events-none" size={16} />
-          </div>
+
+          {(searchTerm || selectedState !== 'All') && (
+            <div className="flex justify-end">
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedState('All');
+                }}
+                className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest hover:underline"
+              >
+                <X size={14} />
+                {t.clear_all}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Price List */}
@@ -263,7 +289,43 @@ export default function MarketView({ state, t, onDataUpdate, onNewsUpdate, onAdd
       </div>
 
       {/* News Section */}
-      <NewsSection news={state.marketNews} t={t} />
+      <section className="space-y-6 px-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-indigo-600">
+            <Newspaper size={24} />
+            <div>
+              <h2 className="text-xl font-bold text-text">{t.latest_news}</h2>
+              <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Global Updates</p>
+            </div>
+          </div>
+          <div className="relative group max-w-xs w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-indigo-600 transition-colors" size={16} />
+            <input
+              type="text"
+              placeholder="Filter news..."
+              value={newsSearchTerm}
+              onChange={(e) => setNewsSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl card-bg border border-transparent focus:border-indigo-600/20 text-xs focus:outline-none focus:ring-4 focus:ring-indigo-600/5 transition-all"
+            />
+            {newsSearchTerm && (
+              <button 
+                onClick={() => setNewsSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-indigo-600"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+        <NewsSection 
+          news={state.marketNews?.filter(n => 
+            n.title.toLowerCase().includes(newsSearchTerm.toLowerCase()) ||
+            n.summary.toLowerCase().includes(newsSearchTerm.toLowerCase()) ||
+            n.source.toLowerCase().includes(newsSearchTerm.toLowerCase())
+          )} 
+          t={t} 
+        />
+      </section>
 
       {/* Price Alerts Section */}
       <section className="space-y-6 px-1">

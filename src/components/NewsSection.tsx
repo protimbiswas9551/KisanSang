@@ -11,14 +11,17 @@ interface NewsSectionProps {
 }
 
 export default function NewsSection({ news, t, className }: NewsSectionProps) {
-  if (!news || news.length === 0) return null;
+  if (!news || news.length === 0) {
+    return (
+      <div className={cn("text-center py-10 card-bg rounded-[2rem] border border-dashed border-border/50", className)}>
+        <Newspaper size={32} className="mx-auto mb-2 text-secondary opacity-20" />
+        <p className="text-xs text-secondary font-medium">No news articles found matching your filter.</p>
+      </div>
+    );
+  }
 
   return (
     <section className={cn("space-y-4", className)}>
-      <div className="flex items-center gap-2 text-indigo-600 mb-2">
-        <Newspaper size={20} />
-        <h2 className="font-bold text-gray-800 dark:text-slate-100">{t.latest_news}</h2>
-      </div>
       <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide -mx-4 px-4">
         {news.map((item, idx) => (
           <motion.div

@@ -126,4 +126,5 @@ export interface AppState {
   marketData?: MarketPrice[] | null;
   marketNews?: MarketNews[] | null;
   priceAlerts: PriceAlert[];
+  chatHistory: { role: 'user' | 'ai', text: string }[];
 }

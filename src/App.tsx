@@ -14,6 +14,7 @@ import {
   Thermometer, 
   Wind, 
   AlertTriangle,
+  AlertCircle,
   Settings,
   Home,
   Database,
@@ -138,8 +139,13 @@ export default function App() {
     isRefreshing: false,
     previousCropId: '',
     priceAlerts: JSON.parse(localStorage.getItem('priceAlerts') || '[]'),
+    chatHistory: JSON.parse(localStorage.getItem('chatHistory') || '[]'),
     theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
   });
+
+  useEffect(() => {
+    localStorage.setItem('chatHistory', JSON.stringify(state.chatHistory));
+  }, [state.chatHistory]);
 
   useEffect(() => {
     if (state.theme === 'dark') {
@@ -404,6 +410,7 @@ export default function App() {
           <NavItem active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Home size={20} />} label={t.home} />
           <NavItem active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} icon={<Database size={20} />} label={t.soil} />
           <NavItem active={activeTab === 'crops'} onClick={() => setActiveTab('crops')} icon={<Sprout size={20} />} label={t.crops} />
+          <NavItem active={activeTab === 'disease'} onClick={() => setActiveTab('disease')} icon={<BugIcon size={20} />} label={t.disease} />
           <NavItem active={activeTab === 'weather'} onClick={() => setActiveTab('weather')} icon={<CloudSun size={20} />} label={t.weather} />
           <NavItem active={activeTab === 'market'} onClick={() => setActiveTab('market')} icon={<TrendingUp size={20} />} label={t.market} />
         </div>
@@ -442,6 +449,8 @@ export default function App() {
             state={state} 
             onClose={() => setIsBotOpen(false)} 
             t={t}
+            messages={state.chatHistory}
+            setMessages={(msgs: any) => setState(prev => ({ ...prev, chatHistory: typeof msgs === 'function' ? msgs(prev.chatHistory) : msgs }))}
           />
         )}
       </AnimatePresence>
@@ -494,7 +503,7 @@ function NavItem({ active, onClick, icon, label }: { active: boolean, onClick: (
     <button 
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-300 relative",
+        "flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition-all duration-300 relative",
         active ? "text-primary" : "text-secondary hover:text-text"
       )}
     >
@@ -555,6 +564,16 @@ function HomeView({ state, t, setActiveTab }: { state: AppState, t: any, setActi
           subValue={state.weather?.description}
           onClick={() => setActiveTab('weather')}
         />
+        <QuickStatCard 
+          icon={<BugIcon className="text-red-500" />} 
+          label={t.disease} 
+          value={DISEASES.length}
+          subValue={t.disease_library}
+          onClick={() => setActiveTab('disease')}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
         <QuickStatCard 
           icon={<Droplets className="text-blue-500" />} 
           label="Soil pH" 
@@ -675,56 +694,58 @@ function SoilView({ state, t, onRefresh, onManualInput }: { state: AppState, t: 
       </div>
 
       {/* Main Soil Card */}
-      <div className="card-bg p-8 relative overflow-hidden">
-        <div className="relative z-10 grid grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <div className="space-y-1">
-              <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.ph}</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-5xl font-display font-bold text-primary">{state.soil.ph.toFixed(1)}</h3>
-                <span className="text-xs font-bold text-secondary">Level</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="card-bg p-8 relative overflow-hidden flex flex-col justify-between">
+          <div className="relative z-10 grid grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.ph}</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-5xl font-display font-bold text-primary">{state.soil.ph.toFixed(1)}</h3>
+                  <span className="text-xs font-bold text-secondary">Level</span>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.soil_texture}</p>
+                <h4 className="text-xl font-bold text-text">{state.soil.texture}</h4>
               </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.soil_texture}</p>
-              <h4 className="text-xl font-bold text-text">{state.soil.texture}</h4>
+            
+            <div className="flex flex-col justify-center items-center gap-4">
+              <div className="relative w-32 h-32">
+                <svg className="w-full h-full -rotate-90">
+                  <circle cx="64" cy="64" r="58" fill="none" stroke="currentColor" strokeWidth="12" className="text-gray-100 dark:text-gray-800" />
+                  <circle 
+                    cx="64" 
+                    cy="64" 
+                    r="58" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="12" 
+                    strokeDasharray={364}
+                    strokeDashoffset={364 - (364 * state.soil.ph) / 14}
+                    className="text-primary"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-bold text-secondary uppercase">pH Scale</span>
+                  <span className="text-lg font-bold">14.0</span>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div className="flex flex-col justify-center items-center gap-4">
-            <div className="relative w-32 h-32">
-              <svg className="w-full h-full -rotate-90">
-                <circle cx="64" cy="64" r="58" fill="none" stroke="currentColor" strokeWidth="12" className="text-gray-100 dark:text-gray-800" />
-                <circle 
-                  cx="64" 
-                  cy="64" 
-                  r="58" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="12" 
-                  strokeDasharray={364}
-                  strokeDashoffset={364 - (364 * state.soil.ph) / 14}
-                  className="text-primary"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[10px] font-bold text-secondary uppercase">pH Scale</span>
-                <span className="text-lg font-bold">14.0</span>
-              </div>
-            </div>
-          </div>
+          {/* Background Decoration */}
+          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
         </div>
-        
-        {/* Background Decoration */}
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-      </div>
 
-      {/* Soil Composition Grid */}
-      <div className="grid grid-cols-3 gap-4">
-        <SoilStatCard label={t.sand} value={`${state.soil.sand}%`} color="bg-amber-500" />
-        <SoilStatCard label={t.silt} value={`${state.soil.silt}%`} color="bg-orange-500" />
-        <SoilStatCard label={t.clay} value={`${state.soil.clay}%`} color="bg-red-500" />
+        <SoilTextureTernary 
+          sand={state.soil.sand} 
+          silt={state.soil.silt} 
+          clay={state.soil.clay} 
+          t={t} 
+        />
       </div>
 
       {/* Organic Carbon & Nitrogen */}
@@ -754,6 +775,97 @@ function SoilStatCard({ label, value, color }: { label: string, value: string, c
       <div className={cn("w-2 h-2 rounded-full mx-auto", color)} />
       <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">{label}</p>
       <h4 className="text-lg font-display font-bold">{value}</h4>
+    </div>
+  );
+}
+
+function SoilTextureTernary({ sand, silt, clay, t }: { sand: number, silt: number, clay: number, t: any }) {
+  const size = 200;
+  const padding = 35;
+  const h = (size - 2 * padding) * Math.sqrt(3) / 2;
+  const w = size - 2 * padding;
+  
+  // Vertices
+  const clayV = { x: size / 2, y: padding };
+  const sandV = { x: padding, y: padding + h };
+  const siltV = { x: size - padding, y: padding + h };
+  
+  // Point position
+  const px = (silt / 100 * w) + (clay / 100 * w * 0.5) + padding;
+  const py = padding + h - (clay / 100 * h);
+
+  return (
+    <div className="card-bg p-6 flex flex-col items-center relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 opacity-50" />
+      <h4 className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-6">Soil Texture Diagram</h4>
+      
+      <div className="relative">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="drop-shadow-sm">
+          {/* Triangle Background */}
+          <path 
+            d={`M ${clayV.x} ${clayV.y} L ${sandV.x} ${sandV.y} L ${siltV.x} ${siltV.y} Z`} 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="1.5" 
+            className="text-gray-200 dark:text-gray-700"
+          />
+          
+          {/* Grid lines */}
+          {[25, 50, 75].map(p => {
+            const ratio = p / 100;
+            return (
+              <g key={p} className="text-gray-100 dark:text-gray-800/50" stroke="currentColor" strokeWidth="0.5">
+                {/* Horizontal lines (Clay levels) */}
+                <line 
+                  x1={clayV.x - (clayV.x - sandV.x) * ratio} y1={clayV.y + (sandV.y - clayV.y) * ratio}
+                  x2={clayV.x + (siltV.x - clayV.x) * ratio} y2={clayV.y + (siltV.y - clayV.y) * ratio}
+                />
+                {/* Lines parallel to Clay-Silt (Sand levels) */}
+                <line 
+                  x1={sandV.x + (siltV.x - sandV.x) * ratio} y1={sandV.y}
+                  x2={sandV.x + (clayV.x - sandV.x) * ratio} y2={sandV.y - (sandV.y - clayV.y) * ratio}
+                />
+                {/* Lines parallel to Clay-Sand (Silt levels) */}
+                <line 
+                  x1={siltV.x - (siltV.x - sandV.x) * ratio} y1={siltV.y}
+                  x2={siltV.x - (siltV.x - clayV.x) * ratio} y2={siltV.y - (siltV.y - clayV.y) * ratio}
+                />
+              </g>
+            );
+          })}
+
+          {/* Labels at vertices */}
+          <text x={clayV.x} y={clayV.y - 12} textAnchor="middle" className="text-[10px] font-bold fill-red-500">{t.clay}</text>
+          <text x={sandV.x - 8} y={sandV.y + 18} textAnchor="middle" className="text-[10px] font-bold fill-amber-500">{t.sand}</text>
+          <text x={siltV.x + 8} y={siltV.y + 18} textAnchor="middle" className="text-[10px] font-bold fill-orange-500">{t.silt}</text>
+
+          {/* The Point */}
+          <motion.circle 
+            initial={{ r: 0 }}
+            animate={{ r: 5 }}
+            cx={px} 
+            cy={py} 
+            fill="currentColor" 
+            className="text-primary"
+          />
+          <circle cx={px} cy={py} r="10" fill="currentColor" className="text-primary opacity-20 animate-pulse" />
+        </svg>
+      </div>
+      
+      <div className="mt-6 grid grid-cols-3 gap-4 w-full">
+        <div className="text-center">
+          <p className="text-[8px] font-bold text-secondary uppercase opacity-60 mb-1">{t.sand}</p>
+          <p className="text-xs font-bold text-amber-600">{sand}%</p>
+        </div>
+        <div className="text-center border-x border-gray-100 dark:border-gray-800">
+          <p className="text-[8px] font-bold text-secondary uppercase opacity-60 mb-1">{t.silt}</p>
+          <p className="text-xs font-bold text-orange-600">{silt}%</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[8px] font-bold text-secondary uppercase opacity-60 mb-1">{t.clay}</p>
+          <p className="text-xs font-bold text-red-600">{clay}%</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1497,7 +1609,7 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
 
                 <div className="space-y-4">
                   <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{t.select_severity}</span>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-1 gap-2">
                     {severities.map(severity => {
                       const isSelected = selectedSeverities.includes(severity);
                       return (
@@ -1505,14 +1617,29 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
                           key={severity}
                           onClick={() => toggleSeverity(severity)}
                           className={cn(
-                            "flex-1 py-3 rounded-xl text-[10px] font-bold transition-all border flex items-center justify-center gap-2",
+                            "flex items-center justify-between p-3 rounded-xl border transition-all duration-200",
                             isSelected
-                              ? "bg-primary text-white border-primary shadow-md"
-                              : "card-bg text-secondary border-transparent"
+                              ? "bg-primary/5 border-primary text-primary shadow-sm"
+                              : "card-bg border-transparent text-secondary hover:border-primary/30"
                           )}
                         >
-                          {isSelected && <Check size={12} />}
-                          {severity}
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                              isSelected
+                                ? "bg-primary border-primary"
+                                : "border-border"
+                            )}>
+                              {isSelected && <Check size={12} className="text-white" />}
+                            </div>
+                            <span className="text-xs font-bold">
+                              {severity === 'High' ? t.high : severity === 'Medium' ? t.medium : t.low}
+                            </span>
+                          </div>
+                          <div className={cn(
+                            "w-2 h-2 rounded-full",
+                            severity === 'High' ? "bg-red-500" : severity === 'Medium' ? "bg-amber-500" : "bg-green-500"
+                          )} />
                         </button>
                       );
                     })}
@@ -1529,8 +1656,15 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
           <div key={d.id} className="card-bg p-6 space-y-6 group hover:border-primary/30 transition-all">
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600">
-                  <AlertTriangle size={24} />
+                <div className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+                  d.severity === 'High' ? "bg-red-50 dark:bg-red-900/20 text-red-600" : 
+                  d.severity === 'Medium' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600" :
+                  "bg-green-50 dark:bg-green-900/20 text-green-600"
+                )}>
+                  {d.severity === 'High' ? <AlertCircle size={24} /> : 
+                   d.severity === 'Medium' ? <AlertTriangle size={24} /> : 
+                   <ShieldCheck size={24} />}
                 </div>
                 <div>
                   <h4 className="font-bold text-lg">{d.name[state.language] || d.name.en}</h4>
@@ -1540,9 +1674,9 @@ function DiseaseView({ state, t }: { state: AppState, t: any }) {
               <span className={cn("text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider", 
                 d.severity === 'High' ? "bg-red-100 text-red-600" : 
                 d.severity === 'Medium' ? "bg-amber-100 text-amber-600" :
-                "bg-blue-100 text-blue-600"
+                "bg-green-100 text-green-600"
               )}>
-                {d.severity} Risk
+                {d.severity === 'High' ? t.high : d.severity === 'Medium' ? t.medium : t.low} Risk
               </span>
             </div>
             
@@ -1716,10 +1850,10 @@ function SoilInputModal({ t, onClose, onSave }: { t: any, onClose: () => void, o
   );
 }
 
-function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void, t: any }) {
-  const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([]);
+function VoiceBot({ state, onClose, t, messages, setMessages }: { state: AppState, onClose: () => void, t: any, messages: { role: 'user' | 'ai', text: string }[], setMessages: any }) {
   const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [inputText, setInputText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1760,7 +1894,8 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
   };
 
   const handleUserMessage = async (text: string) => {
-    setMessages(prev => [...prev, { role: 'user', text }]);
+    if (!text.trim()) return;
+    setMessages((prev: any) => [...prev, { role: 'user', text }]);
     setIsTyping(true);
     
     const response = await getGeminiResponse(text, state.language, {
@@ -1770,7 +1905,7 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
     });
     
     setIsTyping(false);
-    setMessages(prev => [...prev, { role: 'ai', text: response }]);
+    setMessages((prev: any) => [...prev, { role: 'ai', text: response }]);
     
     // Speak response
     const utterance = new SpeechSynthesisUtterance(response);
@@ -1791,6 +1926,12 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
     window.speechSynthesis.speak(utterance);
   };
 
+  const handleSend = () => {
+    if (!inputText.trim()) return;
+    handleUserMessage(inputText);
+    setInputText('');
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 100 }}
@@ -1805,9 +1946,17 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
           </div>
           <h2 className="font-bold text-gray-800 dark:text-slate-100">KisanMitra AI</h2>
         </div>
-        <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300">
-          <X size={24} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setMessages([])}
+            className="p-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+          >
+            Clear
+          </button>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300">
+            <X size={24} />
+          </button>
+        </div>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -1851,19 +2000,38 @@ function VoiceBot({ state, onClose, t }: { state: AppState, onClose: () => void,
         )}
       </div>
 
-      <div className="p-6 border-t border-gray-100 dark:border-slate-800 flex flex-col items-center gap-4">
-        <button 
-          onClick={startListening}
-          disabled={isListening}
-          className={cn(
-            "w-20 h-20 rounded-full flex items-center justify-center text-white shadow-2xl transition-all active:scale-90",
-            isListening ? "bg-red-500 animate-pulse" : "bg-purple-600"
-          )}
-        >
-          <Mic size={32} />
-        </button>
-        <p className="text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-widest">
-          {isListening ? 'Listening...' : 'Tap to Speak'}
+      <div className="p-4 border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-bg">
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={startListening}
+            disabled={isListening}
+            className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all active:scale-90",
+              isListening ? "bg-red-500 animate-pulse" : "bg-purple-600"
+            )}
+          >
+            <Mic size={20} />
+          </button>
+          <div className="flex-1 relative">
+            <input 
+              type="text" 
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Type your message..."
+              className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl py-2.5 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all"
+            />
+            <button 
+              onClick={handleSend}
+              disabled={!inputText.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-purple-600 disabled:opacity-30 transition-opacity"
+            >
+              <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+        <p className="text-[10px] text-center text-gray-400 mt-3 uppercase tracking-widest font-bold">
+          {isListening ? 'Listening...' : 'Type or Speak to KisanMitra'}
         </p>
       </div>
     </motion.div>

@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { fetchWeatherData, reverseGeocode } from '../services';
+import { Thermometer, Droplets, Wind, CloudRain, MapPin, AlertCircle, Loader2 } from 'lucide-react';
+import { cn } from '../utils';
 
 // Fix for default marker icon in Leaflet using CDN to avoid build issues
 const DefaultIcon = L.icon({
@@ -31,7 +33,14 @@ function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number
 
 const WeatherMap: React.FC<WeatherMapProps> = ({ lat, lng, locationName }) => {
   const [activeLayer, setActiveLayer] = useState('temp');
-  const [clickedInfo, setClickedInfo] = useState<{ lat: number; lng: number; name: string; weather: any; loading: boolean } | null>(null);
+  const [clickedInfo, setClickedInfo] = useState<{ 
+    lat: number; 
+    lng: number; 
+    name: string; 
+    weather: any; 
+    loading: boolean;
+    error: string | null;
+  } | null>(null);
   
   // Robust API key retrieval
   const apiKey = (import.meta as any).env?.VITE_WEATHER_API_KEY;
@@ -44,17 +53,17 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ lat, lng, locationName }) => {
   ];
 
   const handleMapClick = async (clickLat: number, clickLng: number) => {
-    setClickedInfo({ lat: clickLat, lng: clickLng, name: 'Loading...', weather: null, loading: true });
+    setClickedInfo({ lat: clickLat, lng: clickLng, name: 'Loading...', weather: null, loading: true, error: null });
     
     try {
       const [weather, name] = await Promise.all([
         fetchWeatherData(clickLat, clickLng),
         reverseGeocode(clickLat, clickLng)
       ]);
-      setClickedInfo({ lat: clickLat, lng: clickLng, name, weather, loading: false });
+      setClickedInfo({ lat: clickLat, lng: clickLng, name, weather, loading: false, error: null });
     } catch (error) {
       console.error("Error fetching map point data:", error);
-      setClickedInfo(null);
+      setClickedInfo({ lat: clickLat, lng: clickLng, name: 'Error', weather: null, loading: false, error: 'Failed to fetch weather data' });
     }
   };
 
@@ -105,38 +114,70 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ lat, lng, locationName }) => {
           {clickedInfo && (
             <Marker position={[clickedInfo.lat, clickedInfo.lng]}>
               <Popup onClose={() => setClickedInfo(null)}>
-                <div className="min-w-[150px] p-1">
+                <div className="min-w-[180px] p-0 overflow-hidden rounded-lg">
                   {clickedInfo.loading ? (
-                    <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                      <div className="w-3 h-3 border-2 border-[#2D6A4F] border-t-transparent rounded-full animate-spin" />
-                      Fetching details...
+                    <div className="flex flex-col items-center justify-center py-6 px-4 gap-3 bg-white dark:bg-slate-900">
+                      <Loader2 size={24} className="text-primary animate-spin" />
+                      <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Fetching Data...</span>
+                    </div>
+                  ) : clickedInfo.error ? (
+                    <div className="flex flex-col items-center justify-center py-6 px-4 gap-3 bg-red-50 dark:bg-red-900/10">
+                      <AlertCircle size={24} className="text-red-500" />
+                      <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest text-center">{clickedInfo.error}</span>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <div className="border-b border-gray-100 pb-1">
-                        <div className="text-[10px] font-bold text-gray-800 truncate">{clickedInfo.name}</div>
-                        <div className="text-[8px] text-gray-400">Lat: {clickedInfo.lat.toFixed(2)}, Lng: {clickedInfo.lng.toFixed(2)}</div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex flex-col">
-                          <span className="text-[8px] text-gray-400 uppercase">Temp</span>
-                          <span className="text-xs font-bold text-[#2D6A4F]">{clickedInfo.weather.temp}°C</span>
+                    <div className="bg-white dark:bg-slate-900">
+                      <div className="bg-primary/5 px-3 py-2 border-b border-border/50">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin size={12} className="text-primary" />
+                          <div className="text-[11px] font-bold text-text truncate max-w-[140px]">{clickedInfo.name}</div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-[8px] text-gray-400 uppercase">Rain</span>
-                          <span className="text-xs font-bold text-blue-500">{clickedInfo.weather.rain}mm</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[8px] text-gray-400 uppercase">Wind</span>
-                          <span className="text-xs font-bold text-amber-600">{clickedInfo.weather.windSpeed}km/h</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[8px] text-gray-400 uppercase">Humidity</span>
-                          <span className="text-xs font-bold text-indigo-500">{clickedInfo.weather.humidity}%</span>
+                        <div className="text-[9px] text-secondary font-medium mt-0.5">
+                          {clickedInfo.lat.toFixed(3)}°, {clickedInfo.lng.toFixed(3)}°
                         </div>
                       </div>
-                      <div className="text-[9px] text-gray-500 italic pt-1 border-t border-gray-50">
-                        {clickedInfo.weather.description}
+                      
+                      <div className="p-3 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-orange-500">
+                              <Thermometer size={10} />
+                              <span className="text-[8px] font-bold uppercase tracking-tighter">Temp</span>
+                            </div>
+                            <div className="text-sm font-bold text-text">{clickedInfo.weather.temp}°C</div>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-blue-500">
+                              <CloudRain size={10} />
+                              <span className="text-[8px] font-bold uppercase tracking-tighter">Rain</span>
+                            </div>
+                            <div className="text-sm font-bold text-text">{clickedInfo.weather.rain}mm</div>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-amber-600">
+                              <Wind size={10} />
+                              <span className="text-[8px] font-bold uppercase tracking-tighter">Wind</span>
+                            </div>
+                            <div className="text-sm font-bold text-text">{clickedInfo.weather.windSpeed}km/h</div>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-indigo-500">
+                              <Droplets size={10} />
+                              <span className="text-[8px] font-bold uppercase tracking-tighter">Humid</span>
+                            </div>
+                            <div className="text-sm font-bold text-text">{clickedInfo.weather.humidity}%</div>
+                          </div>
+                        </div>
+                        
+                        <div className="pt-2 border-t border-border/50">
+                          <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg px-2 py-1.5 flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            <span className="text-[10px] font-medium text-secondary capitalize">{clickedInfo.weather.description}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
